@@ -1,10 +1,14 @@
 BUILD_DIR := build
 FINAL_PATH := $(BUILD_DIR)/lemon
 
-C_FILES := $(shell find src -name '*.c')
+SRC_PATH := src
+INC_PATH := include
 
-$(FINAL_PATH): $(BUILD_DIR) $(C_FILES)
-	$(CC) -o $(FINAL_PATH) $(C_FILES)
+C_FILES := $(shell find $(SRC_PATH) -name '*.c')
+H_FILES := $(shell find $(INC_PATH) -name '*.h')
+
+$(FINAL_PATH): $(BUILD_DIR) $(C_FILES) $(H_FILES)
+	$(CC) -o $(FINAL_PATH) -I$(INC_PATH) $(C_FILES)
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
