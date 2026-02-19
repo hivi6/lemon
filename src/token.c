@@ -122,7 +122,7 @@ int lexer_read_token() {
 		return lexer_append_token(TT_INT_LITERAL);
 	}
 
-	lexer_error(lexer.prev, lexer.cur, "unexpected character");
+	lexer_error(lexer.prev, lexer.cur, "Unexpected character");
 	return TT_EOF;
 }
 

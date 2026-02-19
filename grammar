@@ -2,6 +2,7 @@
 GRAMMAR
 ========================================
 
+<prog>      := <stmt>*
 <stmt>      := <expr-stmt>
 <expr-stmt> := <expr> SEMICOLON
 <expr>      := INT_LITERAL

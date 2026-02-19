@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "token.h"
+#include "ast.h"
 #include "util.h"
 
 // ========================================
@@ -19,11 +20,15 @@ int main(int argc, const char **argv) {
 	int arg_index = 1;
 
 	int flag_usage = 0;
+	int tokens_flag = 0;
 
 	while (arg_index < argc) {
 		if (strcmp("--help", argv[arg_index]) == 0 ||
 			strcmp("-h", argv[arg_index]) == 0) {
 			flag_usage = 1;
+		}
+		else if (strcmp("--only-tokens", argv[arg_index]) == 0) {
+			tokens_flag = 1;
 		}
 		else break;
 
@@ -46,12 +51,20 @@ int main(int argc, const char **argv) {
 
 	token_t *tokens = generate_tokens(filepath, src);
 
-	for (token_t *cur = tokens; cur; cur = cur->next) { 
-		char *lexical = token_lexical(*cur);
-		printf("%s | %s\n", token_type(*cur), lexical);
-		free(lexical);
+	if (tokens_flag) {
+		for (token_t *cur = tokens; cur; cur = cur->next) { 
+			char *lexical = token_lexical(*cur);
+			printf("%s | %s\n", token_type(*cur), lexical);
+			free(lexical);
+		}
+		return 0;
 	}
 
+	ast_t *ast = generate_ast(tokens);
+
+	print_ast(ast);
+
+	free_ast(ast);
 	free_tokens(tokens);
 	free(src);
 
@@ -66,7 +79,8 @@ void usage(FILE *fd) {
 	fprintf(fd, "USAGE: ./lemon [flags] <filename>\n");
 	fprintf(fd, "\n");
 	fprintf(fd, "FLAGS:\n");
-	fprintf(fd, "    --help, -h  This screen\n");
+	fprintf(fd, "    --help, -h     This screen\n");
+	fprintf(fd, "    --only-tokens  Only print tokens\n");
 	fprintf(fd, "\n");
 	fprintf(fd, "MORE INFO:\n");
 	fprintf(fd, "    -> To read from stdin run as follows './lemon -'\n");
