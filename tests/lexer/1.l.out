@@ -1,0 +1,4 @@
+tests/lexer/1.l:2:2: unexpected character
+        |                v 
+2       >                @@
+        |

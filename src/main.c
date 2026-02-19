@@ -1,16 +1,75 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "error.h"
+#include "token.h"
+#include "util.h"
 
-int main() {
-	const char *filepath = "stdin";
-	const char *src = "abcd\n\thello\t123\n456";
+// ========================================
+// helper declaration
+// ========================================
 
-	pos_t start = POS_INIT;
-	pos_t end = (pos_t) {.index=6, .line=3, .column=1};
+void usage(FILE *fd);
 
-	error_print(filepath, src, start, end, "some error");
+// ========================================
+// main definition
+// ========================================
+
+int main(int argc, const char **argv) {
+	int arg_index = 1;
+
+	int flag_usage = 0;
+
+	while (arg_index < argc) {
+		if (strcmp("--help", argv[arg_index]) == 0 ||
+			strcmp("-h", argv[arg_index]) == 0) {
+			flag_usage = 1;
+		}
+		else break;
+
+		arg_index++;
+	}
+
+	if (flag_usage) {
+		usage(stdout);
+		return 0;
+	}
+
+	if (arg_index >= argc) {
+		fprintf(stderr, "ERROR: No source files provided\n");
+		usage(stderr);
+		return 1;
+	}
+
+	const char *filepath = argv[arg_index];
+	char *src = read_file(filepath);
+
+	token_t *tokens = generate_tokens(filepath, src);
+
+	for (token_t *cur = tokens; cur; cur = cur->next) { 
+		char *lexical = token_lexical(*cur);
+		printf("%s | %s\n", token_type(*cur), lexical);
+		free(lexical);
+	}
+
+	free_tokens(tokens);
+	free(src);
 
 	return 0;
+}
+
+// ========================================
+// helper definition
+// ========================================
+
+void usage(FILE *fd) {
+	fprintf(fd, "USAGE: ./lemon [flags] <filename>\n");
+	fprintf(fd, "\n");
+	fprintf(fd, "FLAGS:\n");
+	fprintf(fd, "    --help, -h  This screen\n");
+	fprintf(fd, "\n");
+	fprintf(fd, "MORE INFO:\n");
+	fprintf(fd, "    -> To read from stdin run as follows './lemon -'\n");
+	fprintf(fd, "\n");
 }
 
