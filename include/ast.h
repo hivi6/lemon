@@ -8,6 +8,7 @@
 
 enum {
 	AST_LITERAL,
+	AST_BINARY,
 	AST_EXPR_STMT,
 };
 
@@ -23,6 +24,12 @@ struct ast_t {
 	struct {
 		token_t token;
 	} literal;
+
+	struct {
+		struct ast_t *left;
+		token_t op;
+		struct ast_t *right;
+	} binary;
 
 	struct {
 		struct ast_t *expr;

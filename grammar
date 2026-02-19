@@ -5,13 +5,17 @@ GRAMMAR
 <prog>      := <stmt>*
 <stmt>      := <expr-stmt>
 <expr-stmt> := <expr> SEMICOLON
-<expr>      := INT_LITERAL
+<expr>      := <add-expr>
+<add-expr>  := <primary> ( ( PLUS | MINUS ) <primary> )*
+<primary>   := INT_LITERAL
 
 ========================================
 TOKEN
 ========================================
 
 SEMICOLON := ";"
+PLUS      := "+"
+MINUS     := "-"
 
 INT_LITERAL := "0" | [1-9][0-9]*
 

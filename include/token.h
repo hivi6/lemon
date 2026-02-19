@@ -5,7 +5,11 @@
 
 enum {
 	TT_EOF = 0,
+
 	TT_SEMICOLON,
+	TT_PLUS,
+	TT_MINUS,
+
 	TT_INT_LITERAL,
 };
 

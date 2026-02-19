@@ -1,0 +1,17 @@
+AST
++-- AST_EXPR_STMT
+|   +-- AST_BINARY(TT_MINUS | -)
+|       +-- AST_BINARY(TT_MINUS | -)
+|       |   +-- AST_BINARY(TT_PLUS | +)
+|       |   |   +-- AST_BINARY(TT_PLUS | +)
+|       |   |   |   +-- AST_LITERAL(TT_INT_LITERAL | 123)
+|       |   |   |   +-- AST_LITERAL(TT_INT_LITERAL | 312)
+|       |   |   +-- AST_LITERAL(TT_INT_LITERAL | 5234)
+|       |   +-- AST_LITERAL(TT_INT_LITERAL | 123)
+|       +-- AST_LITERAL(TT_INT_LITERAL | 123123)
++-- AST_EXPR_STMT
+    +-- AST_BINARY(TT_PLUS | +)
+        +-- AST_BINARY(TT_MINUS | -)
+        |   +-- AST_LITERAL(TT_INT_LITERAL | 4123)
+        |   +-- AST_LITERAL(TT_INT_LITERAL | 12)
+        +-- AST_LITERAL(TT_INT_LITERAL | 3)

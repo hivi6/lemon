@@ -23,10 +23,13 @@ ast_t *parse_prog();
 ast_t *parse_stmt();
 ast_t *parse_expr_stmt();
 ast_t *parse_expr();
+ast_t *parse_expr_add();
+ast_t *parse_expr_primary();
 
 ast_t *ast_malloc(int type, const char *filepath, const char *src, pos_t start,
 	pos_t end);
 ast_t *ast_literal(token_t token);
+ast_t *ast_binary(ast_t *left, token_t op, ast_t *right);
 ast_t *ast_expr_stmt(ast_t *expr, token_t semicolon);
 
 void print_ast_helper(ast_t *ast, int *last, int depth);
@@ -52,6 +55,10 @@ void free_ast(ast_t *ast) {
 
 	switch (ast->type) {
 	case AST_LITERAL:
+		break;
+	case AST_BINARY:
+		free_ast(ast->binary.left);
+		free_ast(ast->binary.right);
 		break;
 	case AST_EXPR_STMT:
 		free_ast(ast->expr_stmt.expr);
@@ -135,15 +142,30 @@ ast_t *parse_expr_stmt() {
 }
 
 ast_t *parse_expr() {
+	return parse_expr_add();
+}
+
+ast_t *parse_expr_add() {
+	ast_t *left = parse_expr_primary();
+	while (parser_current().type == TT_PLUS || 
+		parser_current().type == TT_MINUS) {
+		token_t op = parser_next();
+		left = ast_binary(left, op, parse_expr_primary());
+	}
+	return left;
+}
+
+ast_t *parse_expr_primary() {
 	token_t token = parser_current();
-	if (!parser_match(TT_INT_LITERAL)) {
-		error_print(token.filepath, token.src, token.start, token.end,
-			"Expected int literal");
-		exit(1);
+	if (parser_match(TT_INT_LITERAL)) {
+		return ast_literal(token);
 	}
 
-	return ast_literal(token);
+	error_print(token.filepath, token.src, token.start, token.end,
+		"Expected primary");
+	exit(1);
 }
+
 
 ast_t *ast_malloc(int type, const char *filepath, const char *src, pos_t start,
 	pos_t end) {
@@ -161,6 +183,15 @@ ast_t *ast_literal(token_t token) {
 	ast_t *res = ast_malloc(AST_LITERAL, token.filepath, token.src,
 		token.start, token.end);
 	res->literal.token = token;
+	return res;
+}
+
+ast_t *ast_binary(ast_t *left, token_t op, ast_t *right) {
+	ast_t *res = ast_malloc(AST_BINARY, op.filepath, op.src, left->start,
+		right->end);
+	res->binary.left = left;
+	res->binary.op = op;
+	res->binary.right = right;
 	return res;
 }
 
@@ -190,6 +221,16 @@ void print_ast_helper(ast_t *ast, int *last, int depth) {
 		printf(")\n");
 
 		last[depth+1] = 0;
+		break;
+
+	case AST_BINARY:
+		printf("+-- AST_BINARY(");
+		print_token(ast->binary.op);
+		printf(")\n");
+
+		print_ast_helper(ast->binary.left, last, depth+1);
+		last[depth+1] = 0;
+		print_ast_helper(ast->binary.right, last, depth+1);
 		break;
 	
 	case AST_EXPR_STMT:
