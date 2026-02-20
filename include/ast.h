@@ -12,6 +12,7 @@ enum {
 	AST_BINARY,
 	AST_EXPR_STMT,
 	AST_BLOCK_STMT,
+	AST_PROG,
 };
 
 struct ast_t {
@@ -44,6 +45,10 @@ struct ast_t {
 	struct {
 		struct ast_t *stmts;
 	} block_stmt;
+
+	struct {
+		struct ast_t *asts;
+	} prog;
 };
 
 typedef struct ast_t ast_t;

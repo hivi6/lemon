@@ -39,8 +39,10 @@ void analyzer_match(ast_t *ast, int type, const char *error_message) {
 }
 
 void analyze_prog(ast_t *ast) {
-	for (ast_t *cur = ast; cur; cur = cur->next) {
-		analyze_stmt(ast);
+	analyzer_match(ast, AST_PROG, "Expected an AST_PROG ast");
+
+	for (ast_t *cur = ast->prog.asts; cur; cur = cur->next) {
+		analyze_stmt(cur);
 	}
 }
 

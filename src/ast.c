@@ -35,6 +35,7 @@ ast_t *ast_literal(token_t token);
 ast_t *ast_binary(ast_t *left, token_t op, ast_t *right);
 ast_t *ast_expr_stmt(ast_t *expr, token_t semicolon);
 ast_t *ast_block_stmt(token_t lparen, ast_t *stmts, token_t rparen);
+ast_t *ast_prog(ast_t *asts);
 
 void print_ast_helper(ast_t *ast, int *last, int depth);
 void print_token(token_t token);
@@ -53,9 +54,7 @@ ast_t *generate_ast(token_t *tokens) {
 void free_ast(ast_t *ast) {
 	if (ast == NULL) return;
 
-	if (ast->next) {
-		free_ast(ast->next);
-	}
+	if (ast->next) free_ast(ast->next);
 
 	switch (ast->type) {
 	case AST_LITERAL:
@@ -70,6 +69,9 @@ void free_ast(ast_t *ast) {
 	case AST_BLOCK_STMT:
 		free_ast(ast->block_stmt.stmts);
 		break;
+	case AST_PROG:
+		free_ast(ast->prog.asts);
+		break;
 	}
 	free(ast);
 }
@@ -77,10 +79,8 @@ void free_ast(ast_t *ast) {
 void print_ast(ast_t *ast) {
 	printf("AST\n");
 	int last[AST_PRINT_DEPTH] = {};
-	for (ast_t *cur = ast; cur; cur = cur->next) {
-		last[0] = (cur->next ? 1 : 0);
-		print_ast_helper(cur, last, 0);
-	}
+	last[0] = 0;
+	print_ast_helper(ast, last, 0);
 }
 
 // ========================================
@@ -136,7 +136,12 @@ ast_t *parse_prog() {
 		}
 	}
 
-	return head;
+	if (head == NULL) {
+		fprintf(stderr, "empty program\n");
+		exit(1);
+	}
+
+	return ast_prog(head);
 }
 
 ast_t *parse_stmt() {
@@ -214,8 +219,8 @@ ast_t *ast_malloc(int type, const char *filepath, const char *src, pos_t start,
 	res->src = src;
 	res->start = start;
 	res->end = end;
-	res->next = NULL;
 	res->data_type = NULL;
+	res->next = NULL;
 	return res;
 }
 
@@ -247,6 +252,19 @@ ast_t *ast_block_stmt(token_t lparen, ast_t *stmts, token_t rparen) {
 	ast_t *res = ast_malloc(AST_BLOCK_STMT, lparen.filepath, lparen.src,
 		lparen.start, rparen.end);
 	res->block_stmt.stmts = stmts;
+	return res;
+}
+
+ast_t *ast_prog(ast_t *asts) {
+	pos_t start = (asts ? asts->start : POS_INIT);
+	pos_t end = start;
+	for (ast_t *cur = asts; cur; cur = cur->next) {
+		end = cur->end;
+	}
+
+	ast_t *res = ast_malloc(AST_PROG, asts->filepath, asts->src, 
+		start, end);
+	res->prog.asts = asts;
 	return res;
 }
 
@@ -291,6 +309,16 @@ void print_ast_helper(ast_t *ast, int *last, int depth) {
 		printf("+-- AST_BLOCK_STMT\n");
 
 		for (ast_t *x = ast->block_stmt.stmts; x; x = x->next) {
+			last[depth+1] = (x->next ? 1 : 0);
+			print_ast_helper(x, last, depth+1);
+		}
+		break;
+	}
+	
+	case AST_PROG: {
+		printf("+-- AST_PROG\n");
+
+		for (ast_t *x = ast->prog.asts; x; x = x->next) {
 			last[depth+1] = (x->next ? 1 : 0);
 			print_ast_helper(x, last, depth+1);
 		}
