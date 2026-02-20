@@ -21,22 +21,19 @@ struct ast_t {
 	pos_t start;
 	pos_t end;
 
+	// Keep track of the datatype of any
+	type_t *data_type;
+
 	struct ast_t *next;
 
 	struct {
 		token_t token;
-
-		// Keep track of the type of token
-		type_t *type;
 	} literal;
 
 	struct {
 		struct ast_t *left;
 		token_t op;
 		struct ast_t *right;
-
-		// Keep track of the type of the result of binary
-		type_t *type;
 	} binary;
 
 	struct {
