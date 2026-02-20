@@ -11,16 +11,19 @@
 static struct {
 	token_t *tokens;
 	token_t *cur;
+	token_t prev;
 } parser;
 
 void parser_init(token_t *tokens);
 int parser_match(int type);
 token_t parser_current();
 token_t parser_next();
+token_t parser_prev();
 int parser_eof();
 
 ast_t *parse_prog();
 ast_t *parse_stmt();
+ast_t *parse_block_stmt();
 ast_t *parse_expr_stmt();
 ast_t *parse_expr();
 ast_t *parse_expr_add();
@@ -31,6 +34,7 @@ ast_t *ast_malloc(int type, const char *filepath, const char *src, pos_t start,
 ast_t *ast_literal(token_t token);
 ast_t *ast_binary(ast_t *left, token_t op, ast_t *right);
 ast_t *ast_expr_stmt(ast_t *expr, token_t semicolon);
+ast_t *ast_block_stmt(token_t lparen, ast_t *stmts, token_t rparen);
 
 void print_ast_helper(ast_t *ast, int *last, int depth);
 void print_token(token_t token);
@@ -63,14 +67,17 @@ void free_ast(ast_t *ast) {
 	case AST_EXPR_STMT:
 		free_ast(ast->expr_stmt.expr);
 		break;
+	case AST_BLOCK_STMT:
+		free_ast(ast->block_stmt.stmts);
+		break;
 	}
 	free(ast);
 }
 
 void print_ast(ast_t *ast) {
 	printf("AST\n");
+	int last[AST_PRINT_DEPTH] = {};
 	for (ast_t *cur = ast; cur; cur = cur->next) {
-		int last[AST_PRINT_DEPTH] = {};
 		last[0] = (cur->next ? 1 : 0);
 		print_ast_helper(cur, last, 0);
 	}
@@ -83,6 +90,7 @@ void print_ast(ast_t *ast) {
 void parser_init(token_t *tokens) {
 	parser.tokens = tokens;
 	parser.cur = tokens;
+	parser.prev.type = TT_EOF;
 }
 
 int parser_match(int type) {
@@ -100,8 +108,13 @@ token_t parser_current() {
 
 token_t parser_next() {
 	token_t token = parser_current();
+	parser.prev = token;
 	parser.cur = parser.cur->next;
 	return token;
+}
+
+token_t parser_prev() {
+	return parser.prev;
 }
 
 int parser_eof() {
@@ -127,7 +140,34 @@ ast_t *parse_prog() {
 }
 
 ast_t *parse_stmt() {
+	if (parser_match(TT_LBRACE)) {
+		return parse_block_stmt();
+	}
+
 	return parse_expr_stmt();
+}
+
+ast_t *parse_block_stmt() {
+	token_t lparen = parser_prev();
+	ast_t *head = NULL, *tail = NULL;
+	while (!parser_match(TT_RBRACE)) {
+		token_t cur = parser_current();
+
+		if (parser_eof()) {
+			error_print(cur.filepath, cur.src, cur.start, cur.end,
+				"Expected '}' but reached eof");
+			exit(1);
+		}
+
+		ast_t *stmt = parse_stmt();
+
+		if (head == NULL) head = tail = stmt;
+		else {
+			tail->next = stmt;
+			tail = stmt;
+		}
+	}
+	return ast_block_stmt(lparen, head, parser_prev());
 }
 
 ast_t *parse_expr_stmt() {
@@ -165,7 +205,6 @@ ast_t *parse_expr_primary() {
 		"Expected primary");
 	exit(1);
 }
-
 
 ast_t *ast_malloc(int type, const char *filepath, const char *src, pos_t start,
 	pos_t end) {
@@ -205,6 +244,13 @@ ast_t *ast_expr_stmt(ast_t *expr, token_t semicolon) {
 	return res;
 }
 
+ast_t *ast_block_stmt(token_t lparen, ast_t *stmts, token_t rparen) {
+	ast_t *res = ast_malloc(AST_BLOCK_STMT, lparen.filepath, lparen.src,
+		lparen.start, rparen.end);
+	res->block_stmt.stmts = stmts;
+	return res;
+}
+
 void print_ast_helper(ast_t *ast, int *last, int depth) {
 	if (depth+1 >= AST_PRINT_DEPTH) {
 		printf("Very long ast depth, not printing the rest");
@@ -241,6 +287,16 @@ void print_ast_helper(ast_t *ast, int *last, int depth) {
 		last[depth+1] = 0;
 		print_ast_helper(ast->expr_stmt.expr, last, depth+1);
 		break;
+	
+	case AST_BLOCK_STMT: {
+		printf("+-- AST_BLOCK_STMT\n");
+
+		for (ast_t *x = ast->block_stmt.stmts; x; x = x->next) {
+			last[depth+1] = (x->next ? 1 : 0);
+			print_ast_helper(x, last, depth+1);
+		}
+		break;
+	}
 	}
 }
 

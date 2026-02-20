@@ -58,6 +58,8 @@ const char *token_type(token_t token) {
 	if (token.type == TT_SEMICOLON) return "TT_SEMICOLON";
 	if (token.type == TT_PLUS) return "TT_PLUS";
 	if (token.type == TT_MINUS) return "TT_MINUS";
+	if (token.type == TT_LBRACE) return "TT_LBRACE";
+	if (token.type == TT_RBRACE) return "TT_RBRACE";
 	if (token.type == TT_INT_LITERAL) return "TT_INT_LITERAL";
 	if (token.type == TT_EOF) return "TT_EOF";
 	return "UNKNOWN";
@@ -116,6 +118,12 @@ int lexer_read_token() {
 
 	if (ch == ';') {
 		return lexer_append_token(TT_SEMICOLON);
+	}
+	else if (ch == '{') {
+		return lexer_append_token(TT_LBRACE);
+	}
+	else if (ch == '}') {
+		return lexer_append_token(TT_RBRACE);
 	}
 	else if (ch == '+') {
 		return lexer_append_token(TT_PLUS);

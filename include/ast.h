@@ -11,6 +11,7 @@ enum {
 	AST_LITERAL,
 	AST_BINARY,
 	AST_EXPR_STMT,
+	AST_BLOCK_STMT,
 };
 
 struct ast_t {
@@ -42,6 +43,10 @@ struct ast_t {
 		struct ast_t *expr;
 		token_t semicolon;
 	} expr_stmt;
+
+	struct {
+		struct ast_t *stmts;
+	} block_stmt;
 };
 
 typedef struct ast_t ast_t;

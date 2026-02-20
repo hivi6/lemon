@@ -9,6 +9,8 @@ enum {
 	TT_SEMICOLON,
 	TT_PLUS,
 	TT_MINUS,
+	TT_LBRACE,
+	TT_RBRACE,
 
 	TT_INT_LITERAL,
 };

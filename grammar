@@ -2,12 +2,13 @@
 GRAMMAR
 ========================================
 
-<prog>      := <stmt>*
-<stmt>      := <expr-stmt>
-<expr-stmt> := <expr> SEMICOLON
-<expr>      := <add-expr>
-<add-expr>  := <primary> ( ( PLUS | MINUS ) <primary> )*
-<primary>   := INT_LITERAL
+<prog>       := <stmt>*
+<stmt>       := <block-stmt> | <expr-stmt> 
+<block-stmt> := LBRACE <stmt>* RBRACE
+<expr-stmt>  := <expr> SEMICOLON
+<expr>       := <add-expr>
+<add-expr>   := <primary> ( ( PLUS | MINUS ) <primary> )*
+<primary>    := INT_LITERAL
 
 ========================================
 TOKEN
@@ -16,6 +17,8 @@ TOKEN
 SEMICOLON := ";"
 PLUS      := "+"
 MINUS     := "-"
+LBRACE    := "{"
+RBRACE    := "}"
 
 INT_LITERAL := "0" | [1-9][0-9]*
 
