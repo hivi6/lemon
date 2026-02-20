@@ -5,6 +5,7 @@
 #include "token.h"
 #include "ast.h"
 #include "util.h"
+#include "analyze.h"
 
 // ========================================
 // helper declaration
@@ -21,6 +22,7 @@ int main(int argc, const char **argv) {
 
 	int flag_usage = 0;
 	int tokens_flag = 0;
+	int ast_flag = 0;
 
 	while (arg_index < argc) {
 		if (strcmp("--help", argv[arg_index]) == 0 ||
@@ -29,6 +31,9 @@ int main(int argc, const char **argv) {
 		}
 		else if (strcmp("--only-tokens", argv[arg_index]) == 0) {
 			tokens_flag = 1;
+		}
+		else if (strcmp("--only-ast", argv[arg_index]) == 0) {
+			ast_flag = 1;
 		}
 		else break;
 
@@ -62,7 +67,12 @@ int main(int argc, const char **argv) {
 
 	ast_t *ast = generate_ast(tokens);
 
-	print_ast(ast);
+	if (ast_flag) {
+		print_ast(ast);
+		return 0;
+	}
+
+	analyze(ast);
 
 	free_ast(ast);
 	free_tokens(tokens);

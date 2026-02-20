@@ -3,6 +3,7 @@
 
 #include "pos.h"
 #include "token.h"
+#include "type.h"
 
 #define AST_PRINT_DEPTH 1024
 
@@ -23,12 +24,18 @@ struct ast_t {
 
 	struct {
 		token_t token;
+
+		// Keep track of the type of token
+		type_t *type;
 	} literal;
 
 	struct {
 		struct ast_t *left;
 		token_t op;
 		struct ast_t *right;
+
+		// Keep track of the type of the result of binary
+		type_t *type;
 	} binary;
 
 	struct {

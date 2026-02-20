@@ -183,6 +183,7 @@ ast_t *ast_literal(token_t token) {
 	ast_t *res = ast_malloc(AST_LITERAL, token.filepath, token.src,
 		token.start, token.end);
 	res->literal.token = token;
+	res->binary.type = NULL;
 	return res;
 }
 
@@ -192,6 +193,7 @@ ast_t *ast_binary(ast_t *left, token_t op, ast_t *right) {
 	res->binary.left = left;
 	res->binary.op = op;
 	res->binary.right = right;
+	res->binary.type = NULL;
 	return res;
 }
 
