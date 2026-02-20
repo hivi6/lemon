@@ -73,6 +73,7 @@ int main(int argc, const char **argv) {
 	}
 
 	analyze(ast);
+	print_ast_scope(ast);
 
 	free_ast(ast);
 	free_tokens(tokens);

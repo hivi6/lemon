@@ -10,20 +10,21 @@
 
 void analyzer_match(ast_t *ast, int type, const char *error_message);
 
-void analyze_prog(ast_t *ast);
-void analyze_stmt(ast_t *ast);
-void analyze_block_stmt(ast_t *ast);
-void analyze_expr_stmt(ast_t *ast);
-void analyze_expr(ast_t *ast);
-void analyze_binary(ast_t *ast);
-void analyze_literal(ast_t *ast);
+void analyze_prog(st_t *scope, ast_t *ast);
+void analyze_stmt(st_t *scope, ast_t *ast);
+void analyze_block_stmt(st_t *scope, ast_t *ast);
+void analyze_expr_stmt(st_t *scope, ast_t *ast);
+void analyze_expr(st_t *scope, ast_t *ast);
+void analyze_binary(st_t *scope, ast_t *ast);
+void analyze_literal(st_t *scope, ast_t *ast);
 
 // ========================================
 // analyzer.h - definition
 // ========================================
 
 void analyze(ast_t *ast) {
-	analyze_prog(ast);
+	st_t *scope = st_create_scope(NULL); // Creating the global scope
+	analyze_prog(scope, ast);
 }
 
 // ========================================
@@ -38,21 +39,24 @@ void analyzer_match(ast_t *ast, int type, const char *error_message) {
 	}
 }
 
-void analyze_prog(ast_t *ast) {
+void analyze_prog(st_t *scope, ast_t *ast) {
 	analyzer_match(ast, AST_PROG, "Expected an AST_PROG ast");
 
+	ast->scope = scope;
+
 	for (ast_t *cur = ast->prog.asts; cur; cur = cur->next) {
-		analyze_stmt(cur);
+		analyze_stmt(scope, cur);
 	}
 }
 
-void analyze_stmt(ast_t *ast) {
+void analyze_stmt(st_t *scope, ast_t *ast) {
+	ast->scope = scope;
 	switch (ast->type) {
 	case AST_EXPR_STMT:
-		analyze_expr_stmt(ast);
+		analyze_expr_stmt(scope, ast);
 		break;
 	case AST_BLOCK_STMT:
-		analyze_block_stmt(ast);
+		analyze_block_stmt(scope, ast);
 		break;
 	default:
 		fprintf(stderr, "what is this STMT type?\n");
@@ -60,27 +64,31 @@ void analyze_stmt(ast_t *ast) {
 	}
 }
 
-void analyze_block_stmt(ast_t *ast) {
+void analyze_block_stmt(st_t *scope, ast_t *ast) {
 	analyzer_match(ast, AST_BLOCK_STMT, "Expected an AST_BLOCK_STMT ast");
 
+	st_t *block_scope = st_create_scope(scope);
+	ast->scope = block_scope;
+
 	for (ast_t *x = ast->block_stmt.stmts; x; x = x->next) {
-		analyze_stmt(x);
+		analyze_stmt(block_scope, x);
 	}
 }
 
-void analyze_expr_stmt(ast_t *ast) {
+void analyze_expr_stmt(st_t *scope, ast_t *ast) {
 	analyzer_match(ast, AST_EXPR_STMT, "Expected an AST_EXPR_STMT ast");
 
-	analyze_expr(ast->expr_stmt.expr);
+	analyze_expr(scope, ast->expr_stmt.expr);
 }
 
-void analyze_expr(ast_t *ast) {
+void analyze_expr(st_t *scope, ast_t *ast) {
+	ast->scope = scope;
 	switch (ast->type) {
 	case AST_BINARY:
-		analyze_binary(ast);
+		analyze_binary(scope, ast);
 		break;
 	case AST_LITERAL:
-		analyze_literal(ast);
+		analyze_literal(scope, ast);
 		break;
 	default:
 		fprintf(stderr, "what is this EXPR type?\n");
@@ -88,12 +96,12 @@ void analyze_expr(ast_t *ast) {
 	}
 }
 
-void analyze_binary(ast_t *ast) {
+void analyze_binary(st_t *scope, ast_t *ast) {
 	analyzer_match(ast, AST_BINARY, "Expected an AST_BINARY ast");
 
 	ast_t *left = ast->binary.left, *right = ast->binary.right;
-	analyze_expr(left);
-	analyze_expr(right);
+	analyze_expr(scope, left);
+	analyze_expr(scope, right);
 
 	ast_t *err_ast = NULL;
 	if (!left->data_type) err_ast = left;
@@ -108,7 +116,7 @@ void analyze_binary(ast_t *ast) {
 	ast->data_type = left->data_type;
 }
 
-void analyze_literal(ast_t *ast) {
+void analyze_literal(st_t *scope, ast_t *ast) {
 	switch (ast->literal.token.type) {
 	case TT_INT_LITERAL:
 		ast->data_type = type_int();
@@ -116,6 +124,10 @@ void analyze_literal(ast_t *ast) {
 	default:
 		fprintf(stderr, "What is this literal type?\n");
 		exit(1);
+	}
+
+	if (!st_check_literal(scope, ast->literal.token, ast->data_type)) {
+		st_create_literal(scope, ast->literal.token, ast->data_type);
 	}
 }
 

@@ -4,6 +4,7 @@
 #include "pos.h"
 #include "token.h"
 #include "type.h"
+#include "st.h"
 
 #define AST_PRINT_DEPTH 1024
 
@@ -22,8 +23,9 @@ struct ast_t {
 	pos_t start;
 	pos_t end;
 
-	// Keep track of the datatype of any
+	// Keep track of the datatype of any and scope
 	type_t *data_type;
+	st_t *scope;
 
 	struct ast_t *next;
 
@@ -79,6 +81,14 @@ void free_ast(ast_t *ast);
  * 	ast  Ast that needs printing
  */
 void print_ast(ast_t *ast);
+
+/**
+ * Print the scope information
+ *
+ * Params:
+ * 	ast  Ast that needs printing
+ */
+void print_ast_scope(ast_t *ast);
 
 #endif // AST_H
 

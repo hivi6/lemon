@@ -39,6 +39,7 @@ ast_t *ast_prog(ast_t *asts);
 
 void print_ast_helper(ast_t *ast, int *last, int depth);
 void print_token(token_t token);
+void print_ast_scope_info(ast_t *ast);
 
 // ========================================
 // ast.h - definition
@@ -81,6 +82,20 @@ void print_ast(ast_t *ast) {
 	int last[AST_PRINT_DEPTH] = {};
 	last[0] = 0;
 	print_ast_helper(ast, last, 0);
+}
+
+void print_ast_scope(ast_t *ast) {
+	if (ast->type == AST_PROG || ast->type == AST_BLOCK_STMT) {
+		print_ast_scope_info(ast);
+
+		ast_t *start = NULL;
+		if (ast->type == AST_PROG) start = ast->prog.asts;
+		else start = ast->block_stmt.stmts;
+
+		for (ast_t *cur = start; cur; cur = cur->next) {
+			print_ast_scope(cur);
+		}
+	}
 }
 
 // ========================================
@@ -331,5 +346,32 @@ void print_token(token_t token) {
 	char *lexical = token_lexical(token);
 	printf("%s | %s", token_type(token), lexical);
 	free(lexical);
+}
+
+void print_ast_scope_info(ast_t *ast) {
+	printf("========== BLOCK: %p ==========\n", ast->scope);
+	for (int i = ast->start.index; i < ast->end.index; i++) {
+		printf("%c", ast->src[i]);
+	}
+	printf("\n");
+
+	printf("xxxxxxxxxx SYMBOL TABLE xxxxxxxxxx\n");
+
+	for (st_t *cur = ast->scope; cur; cur = cur->next) {
+		switch (cur->type) {
+		case ST_SCOPE:
+			printf("type: ST_SCOPE | id: %p | parent: %p\n", 
+				ast->scope, cur->scope.parent);
+			break;
+		case ST_LITERAL: {
+			char *lexical = token_lexical(cur->literal.token);
+			printf("type: ST_LITERAL | id: %p | lexical: %s\n",
+				cur, lexical);
+			free(lexical);
+			break;
+		}
+		}
+	}
+	printf("\n");
 }
 
