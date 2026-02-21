@@ -10,7 +10,7 @@
 // ========================================
 
 st_t *st_malloc(int type);
-void st_scope_append(st_t *scope, st_t *sym);
+int st_scope_append(st_t *scope, st_t *sym, int size);
 int is_token_equal(token_t left, token_t right);
 
 // ========================================
@@ -20,6 +20,7 @@ int is_token_equal(token_t left, token_t right);
 st_t *st_create_scope(st_t *parent) {
 	st_t *res = st_malloc(ST_SCOPE);
 	res->scope.parent = parent;
+	res->scope.size = 0;
 	return res;
 }
 
@@ -45,8 +46,7 @@ void st_create_literal(st_t *scope, token_t token, type_t *data_type) {
 	st_t *sym = st_malloc(ST_LITERAL);
 	sym->literal.token = token;
 	sym->literal.data_type = data_type;
-
-	st_scope_append(scope, sym);
+	sym->literal.offset = st_scope_append(scope, sym, data_type->size);
 }
 
 st_t *st_check_var(st_t *scope, token_t identifier) {
@@ -70,8 +70,7 @@ void st_create_var(st_t *scope, token_t identifier, type_t *data_type) {
 	st_t *sym = st_malloc(ST_VAR);
 	sym->var.token = identifier;
 	sym->var.data_type = data_type;
-
-	st_scope_append(scope, sym);
+	sym->var.offset = st_scope_append(scope, sym, data_type->size);
 }
 
 // ========================================
@@ -85,13 +84,16 @@ st_t *st_malloc(int type) {
 	return res;
 }
 
-void st_scope_append(st_t *scope, st_t *sym) {
+int st_scope_append(st_t *scope, st_t *sym, int size) {
 	assert(scope->type == ST_SCOPE);
 
 	st_t *cur = NULL;
 	for (cur = scope; cur->next; cur = cur->next) {}
-
 	cur->next = sym;
+
+	int offset = scope->scope.size;
+	scope->scope.size += size;
+	return offset;
 }
 
 int is_token_equal(token_t left, token_t right) {

@@ -17,16 +17,19 @@ struct st_t {
 
 	struct {
 		struct st_t *parent;
+		int size;
 	} scope;
 
 	struct {
 		token_t token;
 		type_t *data_type;
+		int offset;
 	} literal;
 
 	struct {
 		token_t token;
 		type_t *data_type;
+		int offset;
 	} var;
 };
 
