@@ -6,7 +6,7 @@
 // helper declaration
 // ========================================
 
-static type_t *g_int = &(type_t) {TY_INT, 1};
+static type_t *g_int = &(type_t) {TY_INT, 4};
 
 // ========================================
 // type.h - definition

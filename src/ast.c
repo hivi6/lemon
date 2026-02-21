@@ -411,7 +411,8 @@ void print_token(token_t token) {
 }
 
 void print_ast_scope_info(ast_t *ast) {
-	printf("========== BLOCK: %p ==========\n", ast->scope);
+	printf("========== BLOCK: %p | SIZE: %d ==========\n", ast->scope, 
+		ast->scope->scope.size);
 	for (int i = ast->start.index; i < ast->end.index; i++) {
 		printf("%c", ast->src[i]);
 	}
@@ -429,21 +430,24 @@ void print_ast_scope_info(ast_t *ast) {
 		case ST_VAR: {
 			token_t token;
 			type_t *data_type;
+			int offset;
 			if (cur->type == ST_LITERAL) {
 				token = cur->literal.token;
 				data_type = cur->literal.data_type;
+				offset = cur->literal.offset;
 			}
 			else {
 				token = cur->var.token;
 				data_type = cur->var.data_type;
+				offset = cur->var.offset;
 			}
 
 			const char *type_str = "ST_VAR";
 			if (cur->type == ST_LITERAL) type_str = "ST_LITERAL";
 
 			char *lexical = token_lexical(token);
-			printf("type: %-10s | id: %p | type: %p | lexical: %s\n", 
-				type_str, cur, data_type, lexical);
+			printf("type: %-10s | id: %p(offset: %d) | type: %p(size: %d) | lexical: %s\n", 
+				type_str, cur, offset, data_type, data_type->size, lexical);
 			free(lexical);
 			break;
 		}

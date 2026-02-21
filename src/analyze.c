@@ -8,6 +8,8 @@
 // helper declaration
 // ========================================
 
+static st_t *global_scope = NULL;
+
 void analyzer_match(ast_t *ast, int type, const char *error_message);
 
 void analyze_prog(st_t *scope, ast_t *ast);
@@ -24,8 +26,8 @@ void analyze_literal(st_t *scope, ast_t *ast);
 // ========================================
 
 void analyze(ast_t *ast) {
-	st_t *scope = st_create_scope(NULL); // Creating the global scope
-	analyze_prog(scope, ast);
+	global_scope = st_create_scope(NULL); // Creating the global scope
+	analyze_prog(global_scope, ast);
 }
 
 // ========================================
@@ -149,14 +151,13 @@ void analyze_literal(st_t *scope, ast_t *ast) {
 		exit(1);
 	}
 
+	// Keep all the literal in the global scope
 	// Try to find if there is any literal
-	for (st_t *cur = scope; cur; cur = cur->scope.parent) {
-		if (st_check_literal(cur, ast->literal.token, 
-			ast->data_type)) {
-			return;
-		}
+	if (st_check_literal(global_scope, ast->literal.token, 
+		ast->data_type)) {
+		return;
 	}
 
-	st_create_literal(scope, ast->literal.token, ast->data_type);
+	st_create_literal(global_scope, ast->literal.token, ast->data_type);
 }
 
