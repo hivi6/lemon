@@ -24,6 +24,7 @@ int parser_eof();
 ast_t *parse_prog();
 ast_t *parse_stmt();
 ast_t *parse_block_stmt();
+ast_t *parse_var_stmt();
 ast_t *parse_expr_stmt();
 ast_t *parse_expr();
 ast_t *parse_expr_add();
@@ -34,6 +35,8 @@ ast_t *ast_malloc(int type, const char *filepath, const char *src, pos_t start,
 ast_t *ast_literal(token_t token);
 ast_t *ast_binary(ast_t *left, token_t op, ast_t *right);
 ast_t *ast_expr_stmt(ast_t *expr, token_t semicolon);
+ast_t *ast_var_stmt(token_t var_keyword, token_t identifier, ast_t *expr, 
+	token_t semicolon);
 ast_t *ast_block_stmt(token_t lparen, ast_t *stmts, token_t rparen);
 ast_t *ast_prog(ast_t *asts);
 
@@ -85,6 +88,12 @@ void print_ast(ast_t *ast) {
 }
 
 void print_ast_scope(ast_t *ast) {
+	if (ast->type == AST_PROG) { // Print all the type info
+		printf("========== TYPE INFO ==========\n");
+		print_all_types();
+		printf("===============================\n\n");
+	}
+
 	if (ast->type == AST_PROG || ast->type == AST_BLOCK_STMT) {
 		print_ast_scope_info(ast);
 
@@ -163,6 +172,9 @@ ast_t *parse_stmt() {
 	if (parser_match(TT_LBRACE)) {
 		return parse_block_stmt();
 	}
+	else if (parser_match(TT_VAR_KEYWORD)) {
+		return parse_var_stmt();
+	}
 
 	return parse_expr_stmt();
 }
@@ -188,6 +200,33 @@ ast_t *parse_block_stmt() {
 		}
 	}
 	return ast_block_stmt(lparen, head, parser_prev());
+}
+
+ast_t *parse_var_stmt() {
+	token_t var_keyword = parser_prev();
+
+	token_t identifier = parser_current();
+	if (!parser_match(TT_IDENTIFIER)) {
+		token_t cur = parser_current();
+		error_print(cur.filepath, cur.src, cur.start, cur.end,
+			"Expected identifier after var keyword");
+		exit(1);
+	}
+
+	ast_t *expr = NULL;
+	if (parser_match(TT_EQUAL)) {
+		expr = parse_expr();
+	}
+
+	token_t semicolon = parser_current();
+	if (!parser_match(TT_SEMICOLON)) {
+		token_t cur = parser_current();
+		error_print(cur.filepath, cur.src, cur.start, cur.end,
+			"Expected ';' at the end of var stmt");
+		exit(1);
+	}
+
+	return ast_var_stmt(var_keyword, identifier, expr, semicolon);
 }
 
 ast_t *parse_expr_stmt() {
@@ -263,6 +302,17 @@ ast_t *ast_expr_stmt(ast_t *expr, token_t semicolon) {
 	return res;
 }
 
+ast_t *ast_var_stmt(token_t var_keyword, token_t identifier, ast_t *expr, 
+	token_t semicolon) {
+	ast_t *res = ast_malloc(AST_VAR_STMT, var_keyword.filepath, 
+		var_keyword.src, var_keyword.start, semicolon.end);
+	res->var_stmt.var_keyword = var_keyword;
+	res->var_stmt.identifier = identifier;
+	res->var_stmt.expr = expr;
+	res->var_stmt.semicolon = semicolon;
+	return res;
+}
+
 ast_t *ast_block_stmt(token_t lparen, ast_t *stmts, token_t rparen) {
 	ast_t *res = ast_malloc(AST_BLOCK_STMT, lparen.filepath, lparen.src,
 		lparen.start, rparen.end);
@@ -329,6 +379,18 @@ void print_ast_helper(ast_t *ast, int *last, int depth) {
 		}
 		break;
 	}
+
+	case AST_VAR_STMT: {
+		printf("+-- AST_VAR_STMT(");
+		print_token(ast->var_stmt.identifier);
+		printf(")\n");
+
+		last[depth+1] = 0;
+		if (ast->var_stmt.expr) {
+			print_ast_helper(ast->var_stmt.expr, last, depth+1);
+		}
+		break;
+	}
 	
 	case AST_PROG: {
 		printf("+-- AST_PROG\n");
@@ -360,13 +422,28 @@ void print_ast_scope_info(ast_t *ast) {
 	for (st_t *cur = ast->scope; cur; cur = cur->next) {
 		switch (cur->type) {
 		case ST_SCOPE:
-			printf("type: ST_SCOPE | id: %p | parent: %p\n", 
-				ast->scope, cur->scope.parent);
+			printf("type: %-10s | id: %p | parent: %p\n", 
+				"ST_SCOPE", ast->scope, cur->scope.parent);
 			break;
-		case ST_LITERAL: {
-			char *lexical = token_lexical(cur->literal.token);
-			printf("type: ST_LITERAL | id: %p | lexical: %s\n",
-				cur, lexical);
+		case ST_LITERAL: 
+		case ST_VAR: {
+			token_t token;
+			type_t *data_type;
+			if (cur->type == ST_LITERAL) {
+				token = cur->literal.token;
+				data_type = cur->literal.data_type;
+			}
+			else {
+				token = cur->var.token;
+				data_type = cur->var.data_type;
+			}
+
+			const char *type_str = "ST_VAR";
+			if (cur->type == ST_LITERAL) type_str = "ST_LITERAL";
+
+			char *lexical = token_lexical(token);
+			printf("type: %-10s | id: %p | type: %p | lexical: %s\n", 
+				type_str, cur, data_type, lexical);
 			free(lexical);
 			break;
 		}

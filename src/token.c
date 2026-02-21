@@ -28,6 +28,7 @@ int lexer_read_token();
 char lexer_current_char();
 char lexer_next_char();
 int lexer_append_token(int type);
+int lexer_check_keyword();
 
 // ========================================
 // token.h - definition
@@ -60,6 +61,9 @@ const char *token_type(token_t token) {
 	if (token.type == TT_MINUS) return "TT_MINUS";
 	if (token.type == TT_LBRACE) return "TT_LBRACE";
 	if (token.type == TT_RBRACE) return "TT_RBRACE";
+	if (token.type == TT_EQUAL) return "TT_EQUAL";
+	if (token.type == TT_IDENTIFIER) return "TT_IDENTIFIER";
+	if (token.type == TT_VAR_KEYWORD) return "TT_VAR_KEYWORD";
 	if (token.type == TT_INT_LITERAL) return "TT_INT_LITERAL";
 	if (token.type == TT_EOF) return "TT_EOF";
 	return "UNKNOWN";
@@ -131,6 +135,16 @@ int lexer_read_token() {
 	else if (ch == '-') {
 		return lexer_append_token(TT_MINUS);
 	}
+	else if (ch == '=') {
+		return lexer_append_token(TT_EQUAL);
+	}
+	else if (isalpha(ch) || ch == '_') {
+		while (!lexer_eof() && (isalnum(lexer_current_char()) || lexer_current_char() == '_')) {
+			lexer_next_char();
+		}
+		int tt = lexer_check_keyword();
+		return lexer_append_token(tt);
+	}
 	else if (isdigit(ch)) {
 		while (!lexer_eof() && isdigit(lexer_current_char())) {
 			lexer_next_char();
@@ -181,5 +195,13 @@ char lexer_next_char() {
 	lexer.cur.column++;
 
 	return ch;
+}
+
+int lexer_check_keyword() {
+	const char *lexical_start = lexer.src + lexer.prev.index;
+	int len = lexer.cur.index - lexer.prev.index;
+
+	if (strncmp(lexical_start, "var", len) == 0) return TT_VAR_KEYWORD;
+	return TT_IDENTIFIER;
 }
 

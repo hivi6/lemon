@@ -13,6 +13,7 @@ enum {
 	AST_BINARY,
 	AST_EXPR_STMT,
 	AST_BLOCK_STMT,
+	AST_VAR_STMT,
 	AST_PROG,
 };
 
@@ -43,6 +44,13 @@ struct ast_t {
 		struct ast_t *expr;
 		token_t semicolon;
 	} expr_stmt;
+
+	struct {
+		token_t var_keyword;
+		token_t identifier;
+		struct ast_t *expr;
+		token_t semicolon;
+	} var_stmt;
 
 	struct {
 		struct ast_t *stmts;

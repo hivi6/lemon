@@ -3,7 +3,8 @@ GRAMMAR
 ========================================
 
 <prog>       := <stmt>*
-<stmt>       := <block-stmt> | <expr-stmt> 
+<stmt>       := <block-stmt> | <var-stmt> | <expr-stmt>
+<var-stmt>   := VAR_KEYWORD IDENTIFIER ( EQUAL <expr> )? SEMICOLON
 <block-stmt> := LBRACE <stmt>* RBRACE
 <expr-stmt>  := <expr> SEMICOLON
 <expr>       := <add-expr>
@@ -19,6 +20,11 @@ PLUS      := "+"
 MINUS     := "-"
 LBRACE    := "{"
 RBRACE    := "}"
+EQUAL     := "="
+
+IDENTIFIER := [a-zA-Z_][a-zA-Z0-9_]*
+
+VAR_KEYWORD := "var"
 
 INT_LITERAL := "0" | [1-9][0-9]*
 

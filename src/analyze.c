@@ -13,6 +13,7 @@ void analyzer_match(ast_t *ast, int type, const char *error_message);
 void analyze_prog(st_t *scope, ast_t *ast);
 void analyze_stmt(st_t *scope, ast_t *ast);
 void analyze_block_stmt(st_t *scope, ast_t *ast);
+void analyze_var_stmt(st_t *scope, ast_t *ast);
 void analyze_expr_stmt(st_t *scope, ast_t *ast);
 void analyze_expr(st_t *scope, ast_t *ast);
 void analyze_binary(st_t *scope, ast_t *ast);
@@ -58,6 +59,9 @@ void analyze_stmt(st_t *scope, ast_t *ast) {
 	case AST_BLOCK_STMT:
 		analyze_block_stmt(scope, ast);
 		break;
+	case AST_VAR_STMT:
+		analyze_var_stmt(scope, ast);
+		break;
 	default:
 		fprintf(stderr, "what is this STMT type?\n");
 		exit(1);
@@ -73,6 +77,25 @@ void analyze_block_stmt(st_t *scope, ast_t *ast) {
 	for (ast_t *x = ast->block_stmt.stmts; x; x = x->next) {
 		analyze_stmt(block_scope, x);
 	}
+}
+
+void analyze_var_stmt(st_t *scope, ast_t *ast) {
+	analyzer_match(ast, AST_VAR_STMT, "Expected an AST_VAR_STMT ast");
+
+	token_t id = ast->var_stmt.identifier;
+	if (st_check_var(scope, id)) {
+		error_print(id.filepath, id.src, id.start, id.end, 
+			"Variable already defined in scope");
+		exit(1);
+	}
+
+	type_t *data_type = type_int();
+	if (ast->var_stmt.expr) {
+		analyze_expr(scope, ast->var_stmt.expr);
+		data_type = ast->var_stmt.expr->data_type;
+	}
+
+	st_create_var(scope, id, data_type);
 }
 
 void analyze_expr_stmt(st_t *scope, ast_t *ast) {
@@ -126,8 +149,14 @@ void analyze_literal(st_t *scope, ast_t *ast) {
 		exit(1);
 	}
 
-	if (!st_check_literal(scope, ast->literal.token, ast->data_type)) {
-		st_create_literal(scope, ast->literal.token, ast->data_type);
+	// Try to find if there is any literal
+	for (st_t *cur = scope; cur; cur = cur->scope.parent) {
+		if (st_check_literal(cur, ast->literal.token, 
+			ast->data_type)) {
+			return;
+		}
 	}
+
+	st_create_literal(scope, ast->literal.token, ast->data_type);
 }
 

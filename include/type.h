@@ -20,5 +20,10 @@ typedef struct type_t type_t;
  */
 type_t *type_int();
 
+/**
+ * Print all the types
+ */
+void print_all_types();
+
 #endif // TYPE_H
 

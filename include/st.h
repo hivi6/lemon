@@ -7,6 +7,7 @@
 enum {
 	ST_SCOPE,
 	ST_LITERAL,
+	ST_VAR,
 };
 
 struct st_t {
@@ -22,6 +23,11 @@ struct st_t {
 		token_t token;
 		type_t *data_type;
 	} literal;
+
+	struct {
+		token_t token;
+		type_t *data_type;
+	} var;
 };
 
 typedef struct st_t st_t;
@@ -59,6 +65,28 @@ st_t *st_check_literal(st_t *scope, token_t token, type_t *data_type);
  * 	data_type  type of literal
  */
 void st_create_literal(st_t *scope, token_t token, type_t *data_type);
+
+/**
+ * Check if a variable exists (only in that scope)
+ *
+ * Params:
+ * 	scope       scope that needs scanning
+ * 	identifier  token that identifies the variable
+ *
+ * Returns:
+ * 	pointer to the variable (null if no variable)
+ */
+st_t *st_check_var(st_t *scope, token_t identifier);
+
+/**
+ * Create a variable in scope of the given data type
+ *
+ * Params:
+ * 	scope       scope that needs scanning
+ * 	identifier  token that identifies the variable
+ *	data_type   data type of the variable
+ */
+void st_create_var(st_t *scope, token_t identifier, type_t *data_type);
 
 #endif // ST_H
 
