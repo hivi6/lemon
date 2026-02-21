@@ -33,6 +33,7 @@ ast_t *parse_expr_primary();
 ast_t *ast_malloc(int type, const char *filepath, const char *src, pos_t start,
 	pos_t end);
 ast_t *ast_literal(token_t token);
+ast_t *ast_identifier(token_t token);
 ast_t *ast_binary(ast_t *left, token_t op, ast_t *right);
 ast_t *ast_expr_stmt(ast_t *expr, token_t semicolon);
 ast_t *ast_var_stmt(token_t var_keyword, token_t identifier, ast_t *expr, 
@@ -62,6 +63,7 @@ void free_ast(ast_t *ast) {
 
 	switch (ast->type) {
 	case AST_LITERAL:
+	case AST_IDENTIFIER:
 		break;
 	case AST_BINARY:
 		free_ast(ast->binary.left);
@@ -259,6 +261,9 @@ ast_t *parse_expr_primary() {
 	if (parser_match(TT_INT_LITERAL)) {
 		return ast_literal(token);
 	}
+	else if (parser_match(TT_IDENTIFIER)) {
+		return ast_identifier(token);
+	}
 
 	error_print(token.filepath, token.src, token.start, token.end,
 		"Expected primary");
@@ -282,6 +287,13 @@ ast_t *ast_literal(token_t token) {
 	ast_t *res = ast_malloc(AST_LITERAL, token.filepath, token.src,
 		token.start, token.end);
 	res->literal.token = token;
+	return res;
+}
+
+ast_t *ast_identifier(token_t token) {
+	ast_t *res = ast_malloc(AST_IDENTIFIER, token.filepath, token.src,
+		token.start, token.end);
+	res->identifier.token = token;
 	return res;
 }
 
@@ -346,12 +358,26 @@ void print_ast_helper(ast_t *ast, int *last, int depth) {
 	last[depth+1] = 1;
 	switch (ast->type) {
 	case AST_LITERAL:
-		printf("+-- AST_LITERAL(");
-		print_token(ast->literal.token);
+	case AST_IDENTIFIER: {
+		token_t token;
+		const char *ast_type = NULL;
+
+		if (ast->type == AST_LITERAL) {
+			token = ast->literal.token;
+			ast_type = "AST_LITERAL";
+		}
+		else {
+			token = ast->identifier.token;
+			ast_type = "AST_IDENTIFIER";
+		}
+
+		printf("+-- %s(", ast_type);
+		print_token(token);
 		printf(")\n");
 
 		last[depth+1] = 0;
 		break;
+	}
 
 	case AST_BINARY:
 		printf("+-- AST_BINARY(");

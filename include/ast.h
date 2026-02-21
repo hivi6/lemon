@@ -10,6 +10,7 @@
 
 enum {
 	AST_LITERAL,
+	AST_IDENTIFIER,
 	AST_BINARY,
 	AST_EXPR_STMT,
 	AST_BLOCK_STMT,
@@ -33,6 +34,10 @@ struct ast_t {
 	struct {
 		token_t token;
 	} literal;
+
+	struct {
+		token_t token;
+	} identifier;
 
 	struct {
 		struct ast_t *left;

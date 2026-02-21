@@ -9,7 +9,7 @@ GRAMMAR
 <expr-stmt>  := <expr> SEMICOLON
 <expr>       := <add-expr>
 <add-expr>   := <primary> ( ( PLUS | MINUS ) <primary> )*
-<primary>    := INT_LITERAL
+<primary>    := INT_LITERAL | IDENTIFIER
 
 ========================================
 TOKEN

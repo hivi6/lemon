@@ -20,6 +20,7 @@ void analyze_expr_stmt(st_t *scope, ast_t *ast);
 void analyze_expr(st_t *scope, ast_t *ast);
 void analyze_binary(st_t *scope, ast_t *ast);
 void analyze_literal(st_t *scope, ast_t *ast);
+void analyze_identifier(st_t *scope, ast_t *ast);
 
 // ========================================
 // analyzer.h - definition
@@ -115,6 +116,9 @@ void analyze_expr(st_t *scope, ast_t *ast) {
 	case AST_LITERAL:
 		analyze_literal(scope, ast);
 		break;
+	case AST_IDENTIFIER:
+		analyze_identifier(scope, ast);
+		break;
 	default:
 		fprintf(stderr, "what is this EXPR type?\n");
 		exit(1);
@@ -159,5 +163,21 @@ void analyze_literal(st_t *scope, ast_t *ast) {
 	}
 
 	st_create_literal(global_scope, ast->literal.token, ast->data_type);
+}
+
+void analyze_identifier(st_t *scope, ast_t *ast) {
+	st_t *found = NULL;
+
+	for (st_t *cur = scope; cur; cur = cur->scope.parent) {
+		found = st_check_var(cur, ast->identifier.token);
+		if (found) {
+			ast->data_type = found->var.data_type;
+			return;
+		}
+	}
+
+	error_print(ast->filepath, ast->src, ast->start, ast->end,
+		"Variable not defined");
+	exit(1);
 }
 
