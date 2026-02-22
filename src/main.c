@@ -25,6 +25,7 @@ int main(int argc, const char **argv) {
 	int tokens_flag = 0;
 	int ast_flag = 0;
 	int st_flag = 0;
+	int ir_flag = 0;
 
 	while (arg_index < argc) {
 		if (strcmp("--help", argv[arg_index]) == 0 ||
@@ -39,6 +40,9 @@ int main(int argc, const char **argv) {
 		}
 		else if (strcmp("--only-st", argv[arg_index]) == 0) {
 			st_flag = 1;
+		}
+		else if (strcmp("--only-ir", argv[arg_index]) == 0) {
+			ir_flag = 1;
 		}
 		else break;
 
@@ -84,9 +88,13 @@ int main(int argc, const char **argv) {
 		return 0;
 	}
 
-	print_ast_scope(ast);
 	ir_t *ir = generate_ir(ast);
-	print_ir(ir);
+
+	if (ir_flag) {
+		print_ast_scope(ast);
+		print_ir(ir);
+		return 0;
+	}
 
 	free_ast(ast);
 	free_tokens(tokens);
@@ -107,6 +115,7 @@ void usage(FILE *fd) {
 	fprintf(fd, "    --only-tokens  Only print tokens\n");
 	fprintf(fd, "    --only-ast     Only print ast\n");
 	fprintf(fd, "    --only-st      Only print symbol table per scope\n");
+	fprintf(fd, "    --only-ir      Only print ir\n");
 	fprintf(fd, "\n");
 	fprintf(fd, "MORE INFO:\n");
 	fprintf(fd, "    -> To read from stdin run as follows './lemon -'\n");
