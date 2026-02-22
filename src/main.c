@@ -7,6 +7,7 @@
 #include "util.h"
 #include "analyze.h"
 #include "ir.h"
+#include "vm.h"
 
 // ========================================
 // helper declaration
@@ -26,6 +27,7 @@ int main(int argc, const char **argv) {
 	int ast_flag = 0;
 	int st_flag = 0;
 	int ir_flag = 0;
+	int vm_state_flag = 0;
 
 	while (arg_index < argc) {
 		if (strcmp("--help", argv[arg_index]) == 0 ||
@@ -43,6 +45,9 @@ int main(int argc, const char **argv) {
 		}
 		else if (strcmp("--only-ir", argv[arg_index]) == 0) {
 			ir_flag = 1;
+		}
+		else if (strcmp("--only-vm-state", argv[arg_index]) == 0) {
+			vm_state_flag = 1;
 		}
 		else break;
 
@@ -96,6 +101,14 @@ int main(int argc, const char **argv) {
 		return 0;
 	}
 
+	run_vm(ir);
+	if (vm_state_flag) {
+		print_ir(ir);
+		printf("\n");
+		print_vm_state(ir);
+		return 0;
+	}
+
 	free_ast(ast);
 	free_tokens(tokens);
 	free(src);
@@ -111,11 +124,12 @@ void usage(FILE *fd) {
 	fprintf(fd, "USAGE: ./lemon [flags] <filename>\n");
 	fprintf(fd, "\n");
 	fprintf(fd, "FLAGS:\n");
-	fprintf(fd, "    --help, -h     This screen\n");
-	fprintf(fd, "    --only-tokens  Only print tokens\n");
-	fprintf(fd, "    --only-ast     Only print ast\n");
-	fprintf(fd, "    --only-st      Only print symbol table per scope\n");
-	fprintf(fd, "    --only-ir      Only print ir\n");
+	fprintf(fd, "    --help, -h       This screen\n");
+	fprintf(fd, "    --only-tokens    Only print tokens\n");
+	fprintf(fd, "    --only-ast       Only print ast\n");
+	fprintf(fd, "    --only-st        Only print symbol table\n");
+	fprintf(fd, "    --only-ir        Only print ir\n");
+	fprintf(fd, "    --only-vm-state  Only print vm state\n");
 	fprintf(fd, "\n");
 	fprintf(fd, "MORE INFO:\n");
 	fprintf(fd, "    -> To read from stdin run as follows './lemon -'\n");
