@@ -27,7 +27,8 @@ struct ast_t {
 
 	// Keep track of the datatype of any and scope
 	type_t *data_type;
-	st_t *scope;
+	st_t *memory_scope;
+	st_t *name_scope;
 
 	struct ast_t *next;
 

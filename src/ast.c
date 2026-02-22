@@ -96,7 +96,7 @@ void print_ast_scope(ast_t *ast) {
 		printf("===============================\n\n");
 	}
 
-	if (ast->type == AST_PROG || ast->type == AST_BLOCK_STMT) {
+	if (ast->type == AST_PROG) {
 		print_ast_scope_info(ast);
 
 		ast_t *start = NULL;
@@ -279,6 +279,8 @@ ast_t *ast_malloc(int type, const char *filepath, const char *src, pos_t start,
 	res->start = start;
 	res->end = end;
 	res->data_type = NULL;
+	res->name_scope = NULL;
+	res->memory_scope = NULL;
 	res->next = NULL;
 	return res;
 }
@@ -437,21 +439,20 @@ void print_token(token_t token) {
 }
 
 void print_ast_scope_info(ast_t *ast) {
-	printf("========== BLOCK: %p | SIZE: %d ==========\n", ast->scope, 
-		ast->scope->scope.size);
+	printf("========== MEMORY_BLOCK: %p | MEMORY_SIZE: %d - NAME_BLOCK: %p | NAME_SIZE: %d ==========\n", 
+		ast->memory_scope, ast->memory_scope->scope.size, ast->name_scope, ast->name_scope->scope.size);
 	for (int i = ast->start.index; i < ast->end.index; i++) {
 		printf("%c", ast->src[i]);
 	}
 	printf("\n");
 
-	printf("xxxxxxxxxx SYMBOL TABLE xxxxxxxxxx\n");
+	printf("xxxxxxxxxx SYMBOLS xxxxxxxxxx\n");
 
-	for (st_t *cur = ast->scope; cur; cur = cur->next) {
+	for (st_t *cur = ast->memory_scope; cur; cur = cur->next) {
 		switch (cur->type) {
-		case ST_SCOPE:
-			printf("type: %-10s | id: %p | parent: %p\n", 
-				"ST_SCOPE", ast->scope, cur->scope.parent);
-			break;
+		case ST_MEMORY_SCOPE:
+		case ST_NAME_SCOPE:
+			continue;
 		case ST_LITERAL: 
 		case ST_VAR: {
 			token_t token;
@@ -472,12 +473,23 @@ void print_ast_scope_info(ast_t *ast) {
 			if (cur->type == ST_LITERAL) type_str = "ST_LITERAL";
 
 			char *lexical = token_lexical(token);
-			printf("type: %-10s | id: %p(offset: %d) | type: %p(size: %d) | lexical: %s\n", 
+			int sz = 0;
+			sz = snprintf(NULL, 0, "type: %-10s | id: %p(offset: %d) | type: %p(size: %d) | lexical: %s", 
 				type_str, cur, offset, data_type, data_type->size, lexical);
+			char *str = malloc((sz + 1) * sizeof(char));
+			sprintf(str, "type: %-10s | id: %p(offset: %d) | type: %p(size: %d) | lexical: %s", 
+				type_str, cur, offset, data_type, data_type->size, lexical);
+
+			error_print(token.filepath, token.src, token.start,
+				token.end, str);
+
+
+			free(str);
 			free(lexical);
 			break;
 		}
 		}
+		printf("\n");
 	}
 	printf("\n");
 }
