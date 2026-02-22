@@ -29,6 +29,7 @@ struct ast_t {
 	type_t *data_type;
 	st_t *memory_scope;
 	st_t *name_scope;
+	int offset;
 
 	struct ast_t *next;
 

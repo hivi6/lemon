@@ -281,6 +281,7 @@ ast_t *ast_malloc(int type, const char *filepath, const char *src, pos_t start,
 	res->data_type = NULL;
 	res->name_scope = NULL;
 	res->memory_scope = NULL;
+	res->offset = -1;
 	res->next = NULL;
 	return res;
 }

@@ -6,6 +6,7 @@
 #include "ast.h"
 #include "util.h"
 #include "analyze.h"
+#include "ir.h"
 
 // ========================================
 // helper declaration
@@ -82,6 +83,10 @@ int main(int argc, const char **argv) {
 		print_ast_scope(ast);
 		return 0;
 	}
+
+	print_ast_scope(ast);
+	ir_t *ir = generate_ir(ast);
+	print_ir(ir);
 
 	free_ast(ast);
 	free_tokens(tokens);

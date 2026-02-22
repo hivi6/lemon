@@ -108,6 +108,8 @@ void analyze_var_stmt(st_t* memory_scope, st_t *name_scope, ast_t *ast) {
 	st_t *memory = st_create_var(memory_scope, id, data_type);
 	st_t *name = st_create_var(name_scope, id, data_type);
 	name->var.offset = memory->var.offset; // Set the memory offset value
+	ast->offset = name->var.offset;
+	ast->data_type = data_type;
 }
 
 void analyze_expr_stmt(st_t* memory_scope, st_t *name_scope, ast_t *ast) {
@@ -167,13 +169,13 @@ void analyze_literal(st_t* memory_scope, st_t *name_scope, ast_t *ast) {
 
 	// Keep all the literal in the global scope
 	// Try to find if there is any literal
-	if (st_check_literal(global_memory_scope, ast->literal.token, 
-		ast->data_type)) {
-		return;
-	}
-
-	st_create_literal(global_memory_scope, ast->literal.token, 
+	st_t *var = st_check_literal(global_memory_scope, ast->literal.token, 
 		ast->data_type);
+	if (var == NULL) {
+		var = st_create_literal(global_memory_scope,
+			ast->literal.token, ast->data_type);
+	}
+	ast->offset = var->literal.offset;
 }
 
 void analyze_identifier(st_t* memory_scope, st_t *name_scope, ast_t *ast) {
@@ -184,9 +186,10 @@ void analyze_identifier(st_t* memory_scope, st_t *name_scope, ast_t *ast) {
 			found = st_check_var(cur, ast->identifier.token);
 			if (found) {
 				ast->data_type = found->var.data_type;
+				ast->offset = found->var.offset;
 				return;
 			}
-		}
+		} else break;
 	}
 
 	error_print(ast->filepath, ast->src, ast->start, ast->end,
