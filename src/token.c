@@ -64,6 +64,7 @@ const char *token_type(token_t token) {
 	if (token.type == TT_EQUAL) return "TT_EQUAL";
 	if (token.type == TT_IDENTIFIER) return "TT_IDENTIFIER";
 	if (token.type == TT_VAR_KEYWORD) return "TT_VAR_KEYWORD";
+	if (token.type == TT_PRINT_KEYWORD) return "TT_PRINT_KEYWORD";
 	if (token.type == TT_INT_LITERAL) return "TT_INT_LITERAL";
 	if (token.type == TT_EOF) return "TT_EOF";
 	return "UNKNOWN";
@@ -202,6 +203,7 @@ int lexer_check_keyword() {
 	int len = lexer.cur.index - lexer.prev.index;
 
 	if (strncmp(lexical_start, "var", len) == 0) return TT_VAR_KEYWORD;
+	if (strncmp(lexical_start, "print", len) == 0) return TT_PRINT_KEYWORD;
 	return TT_IDENTIFIER;
 }
 

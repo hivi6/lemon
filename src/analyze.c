@@ -17,6 +17,7 @@ void analyze_prog(st_t *memory_scope, st_t *name_scope, ast_t *ast);
 void analyze_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast);
 void analyze_block_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast);
 void analyze_var_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast);
+void analyze_print_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast);
 void analyze_expr_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast);
 void analyze_expr(st_t *memory_scope, st_t *name_scope, ast_t *ast);
 void analyze_binary(st_t *memory_scope, st_t *name_scope, ast_t *ast);
@@ -71,6 +72,9 @@ void analyze_stmt(st_t* memory_scope, st_t *name_scope, ast_t *ast) {
 	case AST_VAR_STMT:
 		analyze_var_stmt(memory_scope, name_scope, ast);
 		break;
+	case AST_PRINT_STMT:
+		analyze_print_stmt(memory_scope, name_scope, ast);
+		break;
 	default:
 		fprintf(stderr, "what is this STMT type?\n");
 		exit(1);
@@ -110,6 +114,10 @@ void analyze_var_stmt(st_t* memory_scope, st_t *name_scope, ast_t *ast) {
 	name->var.offset = memory->var.offset; // Set the memory offset value
 	ast->offset = name->var.offset;
 	ast->data_type = data_type;
+}
+
+void analyze_print_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast) {
+	analyze_expr(memory_scope, name_scope, ast->print_stmt.expr);
 }
 
 void analyze_expr_stmt(st_t* memory_scope, st_t *name_scope, ast_t *ast) {

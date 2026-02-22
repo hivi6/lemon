@@ -43,6 +43,10 @@ enum {
 	// arg2 = register (left operand); 
 	// arg3 = register (right operand);
 	IR_SUB,
+
+	// Print the content of a register
+	// arg1 = register
+	IR_PRINT,
 };
 
 struct ir_t {

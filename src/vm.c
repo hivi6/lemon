@@ -74,6 +74,11 @@ void run_vm(ir_t *ir) {
 			register_set(ip->arg1, left - right);
 			break;
 		}
+		case IR_PRINT: {
+			int64_t value = register_get(ip->arg1);
+			printf("%lld\n", value);
+			break;
+		}
 		}
 
 		ip = ip->next;

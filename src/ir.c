@@ -17,6 +17,7 @@ int new_register();
 void ir_prog(ast_t *prog);
 void ir_stmt(ast_t *stmt);
 void ir_var_stmt(ast_t *stmt);
+void ir_print_stmt(ast_t *stmt);
 void ir_block_stmt(ast_t *stmt);
 void ir_expr_stmt(ast_t *stmt);
 int ir_expr(ast_t *expr);
@@ -73,6 +74,11 @@ void print_ir(ir_t *ir_head) {
 		case IR_SUB:
 			name = "IR_SUB";
 			size = 3;
+			break;
+
+		case IR_PRINT:
+			name = "IR_PRINT";
+			size = 1;
 			break;
 		}
 
@@ -154,6 +160,9 @@ void ir_stmt(ast_t *stmt) {
 	case AST_EXPR_STMT:
 		ir_expr_stmt(stmt);
 		break;
+	case AST_PRINT_STMT:
+		ir_print_stmt(stmt);
+		break;
 	default:
 		fprintf(stderr, "What is this STMT type?\n");
 		exit(1);
@@ -165,12 +174,15 @@ void ir_var_stmt(ast_t *stmt) {
 	if (stmt->var_stmt.expr) {
 		int offset = stmt->offset;
 		int size = stmt->data_type->size;
-		fflush(stdout);
-
 		int reg = ir_expr(stmt->var_stmt.expr);
 
 		ir_append(IR_GLOBAL_LOAD, offset, size, reg);
 	}
+}
+
+void ir_print_stmt(ast_t *stmt) {
+	int reg = ir_expr(stmt->print_stmt.expr);
+	ir_append(IR_PRINT, reg, 0, 0);
 }
 
 void ir_block_stmt(ast_t *stmt) {

@@ -24,6 +24,7 @@ int parser_eof();
 ast_t *parse_prog();
 ast_t *parse_stmt();
 ast_t *parse_block_stmt();
+ast_t *parse_print_stmt();
 ast_t *parse_var_stmt();
 ast_t *parse_expr_stmt();
 ast_t *parse_expr();
@@ -39,6 +40,7 @@ ast_t *ast_expr_stmt(ast_t *expr, token_t semicolon);
 ast_t *ast_var_stmt(token_t var_keyword, token_t identifier, ast_t *expr, 
 	token_t semicolon);
 ast_t *ast_block_stmt(token_t lparen, ast_t *stmts, token_t rparen);
+ast_t *ast_print_stmt(token_t print_keyword, ast_t *expr, token_t semicolon);
 ast_t *ast_prog(ast_t *asts);
 
 void print_ast_helper(ast_t *ast, int *last, int depth);
@@ -71,6 +73,9 @@ void free_ast(ast_t *ast) {
 		break;
 	case AST_EXPR_STMT:
 		free_ast(ast->expr_stmt.expr);
+		break;
+	case AST_PRINT_STMT:
+		free_ast(ast->print_stmt.expr);
 		break;
 	case AST_BLOCK_STMT:
 		free_ast(ast->block_stmt.stmts);
@@ -177,6 +182,9 @@ ast_t *parse_stmt() {
 	else if (parser_match(TT_VAR_KEYWORD)) {
 		return parse_var_stmt();
 	}
+	else if (parser_match(TT_PRINT_KEYWORD)) {
+		return parse_print_stmt();
+	}
 
 	return parse_expr_stmt();
 }
@@ -229,6 +237,20 @@ ast_t *parse_var_stmt() {
 	}
 
 	return ast_var_stmt(var_keyword, identifier, expr, semicolon);
+}
+
+ast_t *parse_print_stmt() {
+	token_t print_keyword = parser_prev();
+	ast_t *expr = parse_expr();
+	token_t semicolon = parser_current();
+	if (!parser_match(TT_SEMICOLON)) {
+		token_t cur = parser_current();
+		error_print(cur.filepath, cur.src, cur.start, cur.end,
+			"Expected ';' at the end of print stmt");
+		exit(1);
+	}
+
+	return ast_print_stmt(print_keyword, expr, semicolon);
 }
 
 ast_t *parse_expr_stmt() {
@@ -328,6 +350,14 @@ ast_t *ast_var_stmt(token_t var_keyword, token_t identifier, ast_t *expr,
 	return res;
 }
 
+ast_t *ast_print_stmt(token_t print_keyword, ast_t *expr, token_t semicolon) {
+	ast_t *res = ast_malloc(AST_PRINT_STMT, print_keyword.filepath,
+		print_keyword.src, print_keyword.start, semicolon.end);
+	res->print_stmt.print_keyword = print_keyword;
+	res->print_stmt.expr = expr;
+	return res;
+}
+
 ast_t *ast_block_stmt(token_t lparen, ast_t *stmts, token_t rparen) {
 	ast_t *res = ast_malloc(AST_BLOCK_STMT, lparen.filepath, lparen.src,
 		lparen.start, rparen.end);
@@ -418,6 +448,14 @@ void print_ast_helper(ast_t *ast, int *last, int depth) {
 		if (ast->var_stmt.expr) {
 			print_ast_helper(ast->var_stmt.expr, last, depth+1);
 		}
+		break;
+	}
+
+	case AST_PRINT_STMT: {
+		printf("+-- AST_PRINT_STMT\n");
+
+		last[depth+1] = 0;
+		print_ast_helper(ast->print_stmt.expr, last, depth+1);
 		break;
 	}
 	
