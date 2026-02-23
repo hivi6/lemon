@@ -2,17 +2,18 @@
 GRAMMAR
 ========================================
 
-<prog>       := <stmt>*
-<stmt>       := <block-stmt> | <var-stmt> | <print-stmt> | <if-stmt> | <while-stmt> | <expr-stmt>
-<var-stmt>   := VAR_KEYWORD IDENTIFIER ( EQUAL <expr> )? SEMICOLON
-<print-stmt> := PRINT_KEYWORD <expr> SEMICOLON
-<if-stmt>    := IF_KEYWORD LPAREN <expr> RPAREN <stmt> ( ELSE_KEYWORD <stmt> )?
-<while-stmt> := WHILE_KEYWORD LPAREN <expr> RPAREN <stmt>
-<block-stmt> := LBRACE <stmt>* RBRACE
-<expr-stmt>  := <expr> SEMICOLON
-<expr>       := <add-expr>
-<add-expr>   := <primary> ( ( PLUS | MINUS ) <primary> )*
-<primary>    := INT_LITERAL | IDENTIFIER
+<prog>        := <stmt>*
+<stmt>        := <block-stmt> | <var-stmt> | <print-stmt> | <if-stmt> | <while-stmt> | <expr-stmt>
+<var-stmt>    := VAR_KEYWORD IDENTIFIER ( EQUAL <expr> )? SEMICOLON
+<print-stmt>  := PRINT_KEYWORD <expr> SEMICOLON
+<if-stmt>     := IF_KEYWORD LPAREN <expr> RPAREN <stmt> ( ELSE_KEYWORD <stmt> )?
+<while-stmt>  := WHILE_KEYWORD LPAREN <expr> RPAREN <stmt>
+<block-stmt>  := LBRACE <stmt>* RBRACE
+<expr-stmt>   := <expr> SEMICOLON
+<expr>        := <assign-expr>
+<assign-expr> := <add-expr> ( EQUAL <assign-expr> )?
+<add-expr>    := <primary> ( ( PLUS | MINUS ) <primary> )*
+<primary>     := INT_LITERAL | IDENTIFIER
 
 ========================================
 TOKEN

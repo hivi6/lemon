@@ -213,11 +213,16 @@ int lexer_check_keyword() {
 	const char *lexical_start = lexer.src + lexer.prev.index;
 	int len = lexer.cur.index - lexer.prev.index;
 
-	if (strncmp(lexical_start, "var", len) == 0) return TT_VAR_KEYWORD;
-	if (strncmp(lexical_start, "print", len) == 0) return TT_PRINT_KEYWORD;
-	if (strncmp(lexical_start, "if", len) == 0) return TT_IF_KEYWORD;
-	if (strncmp(lexical_start, "else", len) == 0) return TT_ELSE_KEYWORD;
-	if (strncmp(lexical_start, "while", len) == 0) return TT_WHILE_KEYWORD;
+	if (strncmp(lexical_start, "var", len) == 0 && len == 3) 
+		return TT_VAR_KEYWORD;
+	if (strncmp(lexical_start, "print", len) == 0 && len == 5) 
+		return TT_PRINT_KEYWORD;
+	if (strncmp(lexical_start, "if", len) == 0 && len == 2) 
+		return TT_IF_KEYWORD;
+	if (strncmp(lexical_start, "else", len) == 0 && len == 4) 
+		return TT_ELSE_KEYWORD;
+	if (strncmp(lexical_start, "while", len) == 0 && len == 5) 
+		return TT_WHILE_KEYWORD;
 	return TT_IDENTIFIER;
 }
 

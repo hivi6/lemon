@@ -30,6 +30,7 @@ ast_t *parse_if_stmt();
 ast_t *parse_while_stmt();
 ast_t *parse_expr_stmt();
 ast_t *parse_expr();
+ast_t *parse_assign_expr();
 ast_t *parse_expr_add();
 ast_t *parse_expr_primary();
 
@@ -339,7 +340,17 @@ ast_t *parse_expr_stmt() {
 }
 
 ast_t *parse_expr() {
-	return parse_expr_add();
+	return parse_assign_expr();
+}
+
+ast_t *parse_assign_expr() {
+	ast_t *left = parse_expr_add();
+	if (parser_match(TT_EQUAL)) {
+		token_t op = parser_prev();
+		return ast_binary(left, op, parse_assign_expr());
+	}
+
+	return left;
 }
 
 ast_t *parse_expr_add() {
@@ -378,6 +389,7 @@ ast_t *ast_malloc(int type, const char *filepath, const char *src, pos_t start,
 	res->name_scope = NULL;
 	res->memory_scope = NULL;
 	res->offset = -1;
+	res->is_lhs = 0;
 	res->next = NULL;
 	return res;
 }

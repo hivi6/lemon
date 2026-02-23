@@ -295,6 +295,12 @@ int ir_binary_expr(ast_t *expr) {
 		ir_append(IR_SUB, res, left_reg, right_reg);
 		return res;
 	}
+	case TT_EQUAL: {
+		int64_t offset = expr->binary.left->offset;
+		int64_t size = expr->binary.left->data_type->size;
+		ir_append(IR_GLOBAL_LOAD, offset, size, right_reg);
+		return right_reg;
+	}
 	default:
 		fprintf(stderr, "What is this BINARY_OP type?\n");
 		exit(1);

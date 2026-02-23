@@ -33,6 +33,7 @@ struct ast_t {
 	st_t *memory_scope;
 	st_t *name_scope;
 	int offset;
+	int is_lhs;
 
 	struct ast_t *next;
 

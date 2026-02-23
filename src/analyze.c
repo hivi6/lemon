@@ -176,6 +176,12 @@ void analyze_binary(st_t* memory_scope, st_t *name_scope, ast_t *ast) {
 	analyze_expr(memory_scope, name_scope, left);
 	analyze_expr(memory_scope, name_scope, right);
 
+	if (ast->binary.op.type == TT_EQUAL && !left->is_lhs) {
+		error_print(left->filepath, left->src, left->start, left->end,
+			"Expected lhs instead got value");
+		exit(1);
+	}
+
 	ast_t *err_ast = NULL;
 	if (!left->data_type) err_ast = left;
 	if (!right->data_type) err_ast = right;
@@ -219,6 +225,7 @@ void analyze_identifier(st_t* memory_scope, st_t *name_scope, ast_t *ast) {
 			if (found) {
 				ast->data_type = found->var.data_type;
 				ast->offset = found->var.offset;
+				ast->is_lhs = 1;
 				return;
 			}
 		} else break;
