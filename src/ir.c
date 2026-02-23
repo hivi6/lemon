@@ -20,6 +20,7 @@ void ir_var_stmt(ast_t *stmt);
 void ir_print_stmt(ast_t *stmt);
 void ir_block_stmt(ast_t *stmt);
 void ir_expr_stmt(ast_t *stmt);
+void ir_if_stmt(ast_t *stmt);
 int ir_expr(ast_t *expr);
 int ir_binary_expr(ast_t *expr);
 int ir_literal_expr(ast_t *expr);
@@ -80,12 +81,22 @@ void print_ir(ir_t *ir_head) {
 			name = "IR_PRINT";
 			size = 1;
 			break;
+
+		case IR_JMP_TRUE:
+			name = "IR_JMP_TRUE";
+			size = 2;
+			break;
+
+		case IR_JMP:
+			name = "IR_JMP";
+			size = 1;
+			break;
 		}
 
-		printf("%s ", name);
-		if (size >= 1) printf("%lld ", cur->arg1);
-		if (size >= 2) printf("%lld ", cur->arg2);
-		if (size >= 3) printf("%lld ", cur->arg3);
+		printf("0x%09llx | %-30s ", (int64_t) cur, name);
+		if (size >= 1) printf("0x%09llx ", cur->arg1);
+		if (size >= 2) printf("0x%09llx ", cur->arg2);
+		if (size >= 3) printf("0x%09llx ", cur->arg3);
 		printf("\n");
 	}
 }
@@ -163,6 +174,9 @@ void ir_stmt(ast_t *stmt) {
 	case AST_PRINT_STMT:
 		ir_print_stmt(stmt);
 		break;
+	case AST_IF_STMT:
+		ir_if_stmt(stmt);
+		break;
 	default:
 		fprintf(stderr, "What is this STMT type?\n");
 		exit(1);
@@ -183,6 +197,31 @@ void ir_var_stmt(ast_t *stmt) {
 void ir_print_stmt(ast_t *stmt) {
 	int reg = ir_expr(stmt->print_stmt.expr);
 	ir_append(IR_PRINT, reg, 0, 0);
+}
+
+void ir_if_stmt(ast_t *stmt) {
+	int reg = ir_expr(stmt->if_stmt.if_cond);
+
+	// Need to set the pointer
+	ir_t *if_start = ir_append(IR_JMP_TRUE, reg, 0, 0);
+
+	ir_t *else_start = ir_append(IR_NOP, 0, 0, 0);
+
+	if (stmt->if_stmt.else_block) {
+		ir_stmt(stmt->if_stmt.else_block);
+	}
+
+	// Need to set the pointer
+	ir_t *else_end = ir_append(IR_JMP, 0, 0, 0);
+
+	ir_t *if_block = ir_append(IR_NOP, 0, 0, 0);
+
+	ir_stmt(stmt->if_stmt.if_block);
+
+	ir_t *if_end = ir_append(IR_NOP, 0, 0, 0);
+
+	if_start->arg2 = (int64_t) if_block;
+	else_end->arg1 = (int64_t) if_end;
 }
 
 void ir_block_stmt(ast_t *stmt) {

@@ -26,6 +26,7 @@ ast_t *parse_stmt();
 ast_t *parse_block_stmt();
 ast_t *parse_print_stmt();
 ast_t *parse_var_stmt();
+ast_t *parse_if_stmt();
 ast_t *parse_expr_stmt();
 ast_t *parse_expr();
 ast_t *parse_expr_add();
@@ -41,6 +42,8 @@ ast_t *ast_var_stmt(token_t var_keyword, token_t identifier, ast_t *expr,
 	token_t semicolon);
 ast_t *ast_block_stmt(token_t lparen, ast_t *stmts, token_t rparen);
 ast_t *ast_print_stmt(token_t print_keyword, ast_t *expr, token_t semicolon);
+ast_t *ast_if_stmt(token_t if_keyword, ast_t *if_cond, ast_t *if_block, 
+	ast_t *else_block);
 ast_t *ast_prog(ast_t *asts);
 
 void print_ast_helper(ast_t *ast, int *last, int depth);
@@ -79,6 +82,11 @@ void free_ast(ast_t *ast) {
 		break;
 	case AST_BLOCK_STMT:
 		free_ast(ast->block_stmt.stmts);
+		break;
+	case AST_IF_STMT:
+		free_ast(ast->if_stmt.if_cond);
+		free_ast(ast->if_stmt.if_block);
+		free_ast(ast->if_stmt.else_block);
 		break;
 	case AST_PROG:
 		free_ast(ast->prog.asts);
@@ -185,6 +193,9 @@ ast_t *parse_stmt() {
 	else if (parser_match(TT_PRINT_KEYWORD)) {
 		return parse_print_stmt();
 	}
+	else if (parser_match(TT_IF_KEYWORD)) {
+		return parse_if_stmt();
+	}
 
 	return parse_expr_stmt();
 }
@@ -237,6 +248,35 @@ ast_t *parse_var_stmt() {
 	}
 
 	return ast_var_stmt(var_keyword, identifier, expr, semicolon);
+}
+
+ast_t *parse_if_stmt() {
+	token_t if_keyword = parser_prev();
+
+	if (!parser_match(TT_LPAREN)) {
+		token_t cur = parser_current();
+		error_print(cur.filepath, cur.src, cur.start, cur.end,
+			"Expected '(' after if keyword");
+		exit(1);
+	}
+
+	ast_t *if_cond = parse_expr();
+
+	if (!parser_match(TT_RPAREN)) {
+		token_t cur = parser_current();
+		error_print(cur.filepath, cur.src, cur.start, cur.end,
+			"Expected ')' after if condition");
+		exit(1);
+	}
+
+	ast_t *if_block = parse_stmt();
+	ast_t *else_block = NULL;
+
+	if (parser_match(TT_ELSE_KEYWORD)) {
+		else_block = parse_stmt();
+	}
+
+	return ast_if_stmt(if_keyword, if_cond, if_block, else_block);
 }
 
 ast_t *parse_print_stmt() {
@@ -365,6 +405,20 @@ ast_t *ast_block_stmt(token_t lparen, ast_t *stmts, token_t rparen) {
 	return res;
 }
 
+ast_t *ast_if_stmt(token_t if_keyword, ast_t *if_cond, ast_t *if_block,
+	ast_t *else_block) {
+	pos_t end = if_block->end;
+	if (else_block) end = else_block->end;
+
+	ast_t *res = ast_malloc(AST_IF_STMT, if_keyword.filepath, 
+		if_keyword.src, if_keyword.start, end);
+	res->if_stmt.if_keyword = if_keyword;
+	res->if_stmt.if_cond = if_cond;
+	res->if_stmt.if_block = if_block;
+	res->if_stmt.else_block = else_block;
+	return res;
+}
+
 ast_t *ast_prog(ast_t *asts) {
 	pos_t start = (asts ? asts->start : POS_INIT);
 	pos_t end = start;
@@ -447,6 +501,22 @@ void print_ast_helper(ast_t *ast, int *last, int depth) {
 		last[depth+1] = 0;
 		if (ast->var_stmt.expr) {
 			print_ast_helper(ast->var_stmt.expr, last, depth+1);
+		}
+		break;
+	}
+
+	case AST_IF_STMT: {
+		printf("+-- AST_IF_STMT\n");
+
+		print_ast_helper(ast->if_stmt.if_cond, last, depth+1);
+
+		last[depth+1] = (ast->if_stmt.else_block ? 1 : 0);
+		print_ast_helper(ast->if_stmt.if_block, last, depth+1);
+
+		last[depth+1] = 0;
+		ast_t *else_block = ast->if_stmt.else_block;
+		if (else_block) {
+			print_ast_helper(else_block, last, depth+1);
 		}
 		break;
 	}

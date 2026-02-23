@@ -3,9 +3,10 @@ GRAMMAR
 ========================================
 
 <prog>       := <stmt>*
-<stmt>       := <block-stmt> | <var-stmt> | <print-stmt> | <expr-stmt>
+<stmt>       := <block-stmt> | <var-stmt> | <print-stmt> | <if-stmt> | <expr-stmt>
 <var-stmt>   := VAR_KEYWORD IDENTIFIER ( EQUAL <expr> )? SEMICOLON
 <print-stmt> := PRINT_KEYWORD <expr> SEMICOLON
+<if-stmt>    := IF_KEYWORD LPAREN <expr> RPAREN <stmt> ( ELSE_KEYWORD <stmt> )?
 <block-stmt> := LBRACE <stmt>* RBRACE
 <expr-stmt>  := <expr> SEMICOLON
 <expr>       := <add-expr>
@@ -22,11 +23,15 @@ MINUS     := "-"
 LBRACE    := "{"
 RBRACE    := "}"
 EQUAL     := "="
+LPAREN    := "("
+RPAREN    := ")"
 
 IDENTIFIER := [a-zA-Z_][a-zA-Z0-9_]*
 
 VAR_KEYWORD   := "var"
 PRINT_KEYWORD := "print"
+IF_KEYWORD    := "if"
+ELSE_KEYWORD  := "else"
 
 INT_LITERAL := "0" | [1-9][0-9]*
 

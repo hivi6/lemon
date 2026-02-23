@@ -47,6 +47,15 @@ enum {
 	// Print the content of a register
 	// arg1 = register
 	IR_PRINT,
+
+	// Move ip to given pointer if register is true (non-zero)
+	// arg1 = register
+	// arg2 = pointer
+	IR_JMP_TRUE,
+
+	// Move to a given ip
+	// arg1 = pointer
+	IR_JMP,
 };
 
 struct ir_t {

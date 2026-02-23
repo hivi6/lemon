@@ -16,6 +16,7 @@ enum {
 	AST_PRINT_STMT,
 	AST_BLOCK_STMT,
 	AST_VAR_STMT,
+	AST_IF_STMT,
 	AST_PROG,
 };
 
@@ -68,6 +69,13 @@ struct ast_t {
 	struct {
 		struct ast_t *stmts;
 	} block_stmt;
+
+	struct {
+		token_t if_keyword;
+		struct ast_t *if_cond;
+		struct ast_t *if_block;
+		struct ast_t *else_block;
+	} if_stmt;
 
 	struct {
 		struct ast_t *asts;

@@ -79,6 +79,20 @@ void run_vm(ir_t *ir) {
 			printf("%lld\n", value);
 			break;
 		}
+		case IR_JMP: {
+			ir_t *next = (ir_t *) ip->arg1;
+			ip = next;
+			continue;
+		}
+		case IR_JMP_TRUE: {
+			int64_t cond = register_get(ip->arg1);
+			ir_t *next = (ir_t *) ip->arg2;
+			if (cond) {
+				ip = next;
+				continue;
+			}
+			break;
+		}
 		}
 
 		ip = ip->next;

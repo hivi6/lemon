@@ -62,9 +62,13 @@ const char *token_type(token_t token) {
 	if (token.type == TT_LBRACE) return "TT_LBRACE";
 	if (token.type == TT_RBRACE) return "TT_RBRACE";
 	if (token.type == TT_EQUAL) return "TT_EQUAL";
+	if (token.type == TT_LPAREN) return "TT_LPAREN";
+	if (token.type == TT_RPAREN) return "TT_RPAREN";
 	if (token.type == TT_IDENTIFIER) return "TT_IDENTIFIER";
 	if (token.type == TT_VAR_KEYWORD) return "TT_VAR_KEYWORD";
 	if (token.type == TT_PRINT_KEYWORD) return "TT_PRINT_KEYWORD";
+	if (token.type == TT_IF_KEYWORD) return "TT_IF_KEYWORD";
+	if (token.type == TT_ELSE_KEYWORD) return "TT_ELSE_KEYWORD";
 	if (token.type == TT_INT_LITERAL) return "TT_INT_LITERAL";
 	if (token.type == TT_EOF) return "TT_EOF";
 	return "UNKNOWN";
@@ -139,6 +143,12 @@ int lexer_read_token() {
 	else if (ch == '=') {
 		return lexer_append_token(TT_EQUAL);
 	}
+	else if (ch == '(') {
+		return lexer_append_token(TT_LPAREN);
+	}
+	else if (ch == ')') {
+		return lexer_append_token(TT_RPAREN);
+	}
 	else if (isalpha(ch) || ch == '_') {
 		while (!lexer_eof() && (isalnum(lexer_current_char()) || lexer_current_char() == '_')) {
 			lexer_next_char();
@@ -204,6 +214,8 @@ int lexer_check_keyword() {
 
 	if (strncmp(lexical_start, "var", len) == 0) return TT_VAR_KEYWORD;
 	if (strncmp(lexical_start, "print", len) == 0) return TT_PRINT_KEYWORD;
+	if (strncmp(lexical_start, "if", len) == 0) return TT_IF_KEYWORD;
+	if (strncmp(lexical_start, "else", len) == 0) return TT_ELSE_KEYWORD;
 	return TT_IDENTIFIER;
 }
 
