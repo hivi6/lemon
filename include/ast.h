@@ -17,6 +17,7 @@ enum {
 	AST_BLOCK_STMT,
 	AST_VAR_STMT,
 	AST_IF_STMT,
+	AST_WHILE_STMT,
 	AST_PROG,
 };
 
@@ -76,6 +77,12 @@ struct ast_t {
 		struct ast_t *if_block;
 		struct ast_t *else_block;
 	} if_stmt;
+
+	struct {
+		token_t while_keyword;
+		struct ast_t *while_cond;
+		struct ast_t *while_block;
+	} while_stmt;
 
 	struct {
 		struct ast_t *asts;

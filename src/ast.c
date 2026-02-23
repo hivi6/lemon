@@ -27,6 +27,7 @@ ast_t *parse_block_stmt();
 ast_t *parse_print_stmt();
 ast_t *parse_var_stmt();
 ast_t *parse_if_stmt();
+ast_t *parse_while_stmt();
 ast_t *parse_expr_stmt();
 ast_t *parse_expr();
 ast_t *parse_expr_add();
@@ -44,6 +45,8 @@ ast_t *ast_block_stmt(token_t lparen, ast_t *stmts, token_t rparen);
 ast_t *ast_print_stmt(token_t print_keyword, ast_t *expr, token_t semicolon);
 ast_t *ast_if_stmt(token_t if_keyword, ast_t *if_cond, ast_t *if_block, 
 	ast_t *else_block);
+ast_t *ast_while_stmt(token_t while_keyword, ast_t *while_cond, 
+	ast_t *while_block);
 ast_t *ast_prog(ast_t *asts);
 
 void print_ast_helper(ast_t *ast, int *last, int depth);
@@ -87,6 +90,10 @@ void free_ast(ast_t *ast) {
 		free_ast(ast->if_stmt.if_cond);
 		free_ast(ast->if_stmt.if_block);
 		free_ast(ast->if_stmt.else_block);
+		break;
+	case AST_WHILE_STMT:
+		free_ast(ast->while_stmt.while_cond);
+		free_ast(ast->while_stmt.while_block);
 		break;
 	case AST_PROG:
 		free_ast(ast->prog.asts);
@@ -196,6 +203,9 @@ ast_t *parse_stmt() {
 	else if (parser_match(TT_IF_KEYWORD)) {
 		return parse_if_stmt();
 	}
+	else if (parser_match(TT_WHILE_KEYWORD)) {
+		return parse_while_stmt();
+	}
 
 	return parse_expr_stmt();
 }
@@ -277,6 +287,30 @@ ast_t *parse_if_stmt() {
 	}
 
 	return ast_if_stmt(if_keyword, if_cond, if_block, else_block);
+}
+
+ast_t *parse_while_stmt() {
+	token_t while_keyword = parser_prev();
+
+	if (!parser_match(TT_LPAREN)) {
+		token_t cur = parser_current();
+		error_print(cur.filepath, cur.src, cur.start, cur.end,
+			"Expected '(' after while keyword");
+		exit(1);
+	}
+
+	ast_t *while_cond = parse_expr();
+
+	if (!parser_match(TT_RPAREN)) {
+		token_t cur = parser_current();
+		error_print(cur.filepath, cur.src, cur.start, cur.end,
+			"Expected ')' after while condition");
+		exit(1);
+	}
+
+	ast_t *while_block = parse_stmt();
+
+	return ast_while_stmt(while_keyword, while_cond, while_block);
 }
 
 ast_t *parse_print_stmt() {
@@ -419,6 +453,16 @@ ast_t *ast_if_stmt(token_t if_keyword, ast_t *if_cond, ast_t *if_block,
 	return res;
 }
 
+ast_t *ast_while_stmt(token_t while_keyword, ast_t *while_cond, 
+	ast_t *while_block) {
+	ast_t *res = ast_malloc(AST_WHILE_STMT, while_keyword.filepath,
+		while_keyword.src, while_keyword.start, while_block->end);
+	res->while_stmt.while_keyword = while_keyword;
+	res->while_stmt.while_cond = while_cond;
+	res->while_stmt.while_block = while_block;
+	return res;
+}
+
 ast_t *ast_prog(ast_t *asts) {
 	pos_t start = (asts ? asts->start : POS_INIT);
 	pos_t end = start;
@@ -518,6 +562,16 @@ void print_ast_helper(ast_t *ast, int *last, int depth) {
 		if (else_block) {
 			print_ast_helper(else_block, last, depth+1);
 		}
+		break;
+	}
+
+	case AST_WHILE_STMT: {
+		printf("+-- AST_WHILE_STMT\n");
+
+		print_ast_helper(ast->while_stmt.while_cond, last, depth+1);
+
+		last[depth+1] = 0;
+		print_ast_helper(ast->while_stmt.while_block, last, depth+1);
 		break;
 	}
 

@@ -52,6 +52,11 @@ enum {
 	// arg1 = register
 	// arg2 = pointer
 	IR_JMP_TRUE,
+	
+	// Move ip to given pointer if register is false (zero)
+	// arg1 = register
+	// arg2 = pointer
+	IR_JMP_FALSE,
 
 	// Move to a given ip
 	// arg1 = pointer

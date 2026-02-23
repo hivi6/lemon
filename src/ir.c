@@ -21,6 +21,7 @@ void ir_print_stmt(ast_t *stmt);
 void ir_block_stmt(ast_t *stmt);
 void ir_expr_stmt(ast_t *stmt);
 void ir_if_stmt(ast_t *stmt);
+void ir_while_stmt(ast_t *stmt);
 int ir_expr(ast_t *expr);
 int ir_binary_expr(ast_t *expr);
 int ir_literal_expr(ast_t *expr);
@@ -90,6 +91,11 @@ void print_ir(ir_t *ir_head) {
 		case IR_JMP:
 			name = "IR_JMP";
 			size = 1;
+			break;
+
+		case IR_JMP_FALSE:
+			name = "IR_JMP_FALSE";
+			size = 2;
 			break;
 		}
 
@@ -177,6 +183,9 @@ void ir_stmt(ast_t *stmt) {
 	case AST_IF_STMT:
 		ir_if_stmt(stmt);
 		break;
+	case AST_WHILE_STMT:
+		ir_while_stmt(stmt);
+		break;
 	default:
 		fprintf(stderr, "What is this STMT type?\n");
 		exit(1);
@@ -222,6 +231,23 @@ void ir_if_stmt(ast_t *stmt) {
 
 	if_start->arg2 = (int64_t) if_block;
 	else_end->arg1 = (int64_t) if_end;
+}
+
+void ir_while_stmt(ast_t *stmt) {
+	ir_t *while_start = ir_append(IR_NOP, 0, 0, 0);
+
+	int reg = ir_expr(stmt->while_stmt.while_cond);
+
+	// Need to set pointer
+	ir_t *while_cond = ir_append(IR_JMP_FALSE, reg, 0, 0);
+
+	ir_stmt(stmt->while_stmt.while_block);
+
+	ir_append(IR_JMP, (int64_t) while_start, 0, 0);
+
+	ir_t *while_end = ir_append(IR_NOP, 0, 0, 0);
+
+	while_cond->arg3 = (int64_t) while_end;
 }
 
 void ir_block_stmt(ast_t *stmt) {

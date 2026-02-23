@@ -19,6 +19,7 @@ void analyze_block_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast);
 void analyze_var_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast);
 void analyze_print_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast);
 void analyze_if_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast);
+void analyze_while_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast);
 void analyze_expr_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast);
 void analyze_expr(st_t *memory_scope, st_t *name_scope, ast_t *ast);
 void analyze_binary(st_t *memory_scope, st_t *name_scope, ast_t *ast);
@@ -79,6 +80,9 @@ void analyze_stmt(st_t* memory_scope, st_t *name_scope, ast_t *ast) {
 	case AST_IF_STMT:
 		analyze_if_stmt(memory_scope, name_scope, ast);
 		break;
+	case AST_WHILE_STMT:
+		analyze_while_stmt(memory_scope, name_scope, ast);
+		break;
 	default:
 		fprintf(stderr, "what is this STMT type?\n");
 		exit(1);
@@ -133,6 +137,11 @@ void analyze_if_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast) {
 	if (else_block) {
 		analyze_stmt(memory_scope, name_scope, else_block);
 	}
+}
+
+void analyze_while_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast) {
+	analyze_expr(memory_scope, name_scope, ast->while_stmt.while_cond);
+	analyze_stmt(memory_scope, name_scope, ast->while_stmt.while_block);
 }
 
 void analyze_expr_stmt(st_t* memory_scope, st_t *name_scope, ast_t *ast) {
