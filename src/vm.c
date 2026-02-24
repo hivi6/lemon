@@ -7,7 +7,7 @@
 // helper declaration
 // ========================================
 
-static char *global;
+static unsigned char *global;
 static int64_t *regs;
 static int total_regs;
 

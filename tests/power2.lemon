@@ -1,0 +1,10 @@
+var a = 1;
+var n = 34;
+var i = 0;
+
+while (i - n) {
+	print a;
+	a = a + a;
+	i = i + 1;
+}
+

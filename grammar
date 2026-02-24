@@ -3,7 +3,8 @@ GRAMMAR
 ========================================
 
 <prog>          := <stmt>*
-<stmt>          := <block-stmt> | <var-stmt> | <print-stmt> | <if-stmt> | <while-stmt> | <break-stmt> | <continue-stmt> | <expr-stmt>
+<stmt>          := <block-stmt> | <var-stmt> | <print-stmt> | <if-stmt> 
+                 | <while-stmt> | <break-stmt> | <continue-stmt> | <expr-stmt>
 <var-stmt>      := VAR_KEYWORD IDENTIFIER ( EQUAL <expr> )? SEMICOLON
 <print-stmt>    := PRINT_KEYWORD <expr> SEMICOLON
 <if-stmt>       := IF_KEYWORD LPAREN <expr> RPAREN <stmt> ( ELSE_KEYWORD <stmt> )?
