@@ -18,6 +18,8 @@ enum {
 	AST_VAR_STMT,
 	AST_IF_STMT,
 	AST_WHILE_STMT,
+	AST_BREAK_STMT,
+	AST_CONTINUE_STMT,
 	AST_PROG,
 };
 
@@ -84,6 +86,14 @@ struct ast_t {
 		struct ast_t *while_cond;
 		struct ast_t *while_block;
 	} while_stmt;
+
+	struct {
+		token_t break_keyword;
+	} break_stmt;
+
+	struct {
+		token_t continue_keyword;
+	} continue_stmt;
 
 	struct {
 		struct ast_t *asts;

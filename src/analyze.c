@@ -10,6 +10,7 @@
 
 static st_t *global_memory_scope = NULL;
 static st_t *global_name_scope = NULL;
+static int inside_loop = 0;
 
 void analyzer_match(ast_t *ast, int type, const char *error_message);
 
@@ -20,6 +21,8 @@ void analyze_var_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast);
 void analyze_print_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast);
 void analyze_if_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast);
 void analyze_while_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast);
+void analyze_break_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast);
+void analyze_continue_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast);
 void analyze_expr_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast);
 void analyze_expr(st_t *memory_scope, st_t *name_scope, ast_t *ast);
 void analyze_binary(st_t *memory_scope, st_t *name_scope, ast_t *ast);
@@ -35,6 +38,7 @@ void analyze(ast_t *ast) {
 	global_memory_scope = st_create_scope(ST_MEMORY_SCOPE, NULL);
 	global_name_scope = st_create_scope(ST_NAME_SCOPE, 
 		global_memory_scope);
+	inside_loop = 0;
 	analyze_prog(global_memory_scope, global_name_scope, ast);
 }
 
@@ -82,6 +86,12 @@ void analyze_stmt(st_t* memory_scope, st_t *name_scope, ast_t *ast) {
 		break;
 	case AST_WHILE_STMT:
 		analyze_while_stmt(memory_scope, name_scope, ast);
+		break;
+	case AST_BREAK_STMT:
+		analyze_break_stmt(memory_scope, name_scope, ast);
+		break;
+	case AST_CONTINUE_STMT:
+		analyze_continue_stmt(memory_scope, name_scope, ast);
 		break;
 	default:
 		fprintf(stderr, "what is this STMT type?\n");
@@ -140,8 +150,26 @@ void analyze_if_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast) {
 }
 
 void analyze_while_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast) {
+	inside_loop++;
 	analyze_expr(memory_scope, name_scope, ast->while_stmt.while_cond);
 	analyze_stmt(memory_scope, name_scope, ast->while_stmt.while_block);
+	inside_loop--;
+}
+
+void analyze_break_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast) {
+	if (!inside_loop) {
+		error_print(ast->filepath, ast->src, ast->start, ast->end,
+			"Invalid break usage; not inside a loop");
+		exit(1);
+	}
+}
+
+void analyze_continue_stmt(st_t *memory_scope, st_t *name_scope, ast_t *ast) {
+	if (!inside_loop) {
+		error_print(ast->filepath, ast->src, ast->start, ast->end,
+			"Invalid continue usage; not inside a loop");
+		exit(1);
+	}
 }
 
 void analyze_expr_stmt(st_t* memory_scope, st_t *name_scope, ast_t *ast) {

@@ -70,6 +70,8 @@ const char *token_type(token_t token) {
 	if (token.type == TT_IF_KEYWORD) return "TT_IF_KEYWORD";
 	if (token.type == TT_ELSE_KEYWORD) return "TT_ELSE_KEYWORD";
 	if (token.type == TT_WHILE_KEYWORD) return "TT_WHILE_KEYWORD";
+	if (token.type == TT_BREAK_KEYWORD) return "TT_BREAK_KEYWORD";
+	if (token.type == TT_CONTINUE_KEYWORD) return "TT_CONTINUE_KEYWORD";
 	if (token.type == TT_INT_LITERAL) return "TT_INT_LITERAL";
 	if (token.type == TT_EOF) return "TT_EOF";
 	return "UNKNOWN";
@@ -223,6 +225,10 @@ int lexer_check_keyword() {
 		return TT_ELSE_KEYWORD;
 	if (strncmp(lexical_start, "while", len) == 0 && len == 5) 
 		return TT_WHILE_KEYWORD;
+	if (strncmp(lexical_start, "break", len) == 0 && len == 5)
+		return TT_BREAK_KEYWORD;
+	if (strncmp(lexical_start, "continue", len) == 0 && len == 8)
+		return TT_CONTINUE_KEYWORD;
 	return TT_IDENTIFIER;
 }
 

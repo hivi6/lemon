@@ -10,9 +10,14 @@
 
 static ir_t *global_head, *global_tail;
 static st_t *global_memory_scope, *global_name_scope;
+static int total_breaks = 0, total_continues = 0;
+static ir_t **breaks = NULL, **continues = NULL;
 
 ir_t *ir_append(int type, int64_t arg1, int64_t arg2, int64_t arg3);
 int new_register();
+
+void ir_append_break(ir_t *break_ir);
+void ir_append_continue(ir_t *continue_ir);
 
 void ir_prog(ast_t *prog);
 void ir_stmt(ast_t *stmt);
@@ -22,6 +27,8 @@ void ir_block_stmt(ast_t *stmt);
 void ir_expr_stmt(ast_t *stmt);
 void ir_if_stmt(ast_t *stmt);
 void ir_while_stmt(ast_t *stmt);
+void ir_break_stmt(ast_t *stmt);
+void ir_continue_stmt(ast_t *stmt);
 int ir_expr(ast_t *expr);
 int ir_binary_expr(ast_t *expr);
 int ir_literal_expr(ast_t *expr);
@@ -186,6 +193,12 @@ void ir_stmt(ast_t *stmt) {
 	case AST_WHILE_STMT:
 		ir_while_stmt(stmt);
 		break;
+	case AST_BREAK_STMT:
+		ir_break_stmt(stmt);
+		break;
+	case AST_CONTINUE_STMT:
+		ir_continue_stmt(stmt);
+		break;
 	default:
 		fprintf(stderr, "What is this STMT type?\n");
 		exit(1);
@@ -248,6 +261,31 @@ void ir_while_stmt(ast_t *stmt) {
 	ir_t *while_end = ir_append(IR_NOP, 0, 0, 0);
 
 	while_cond->arg3 = (int64_t) while_end;
+
+	// Add the breaks and continues
+	for (int i = 0; i < total_breaks; i++) 
+		breaks[i]->arg1 = (int64_t) while_end;
+	for (int i = 0; i < total_continues; i++) 
+		continues[i]->arg1 = (int64_t) while_start;
+
+	free(breaks);
+	free(continues);
+	total_breaks = 0;
+	total_continues = 0;
+	breaks = NULL;
+	continues = NULL;
+}
+
+void ir_break_stmt(ast_t *stmt) {
+	// Need to add the result in the while statements
+	ir_t *res = ir_append(IR_JMP, 0, 0, 0);
+	ir_append_break(res);
+}
+
+void ir_continue_stmt(ast_t *stmt) {
+	// Need to add the result in the while statements
+	ir_t *res = ir_append(IR_JMP, 0, 0, 0);
+	ir_append_continue(res);
 }
 
 void ir_block_stmt(ast_t *stmt) {
@@ -311,5 +349,17 @@ int ir_identifier_expr(ast_t *expr) {
 	int reg = new_register();
 	ir_append(IR_LOAD_GLOBAL, reg, expr->offset, expr->data_type->size);
 	return reg;
+}
+
+void ir_append_break(ir_t *break_ir) {
+	total_breaks++;
+	breaks = realloc(breaks, total_breaks * sizeof(ir_t*));
+	breaks[total_breaks-1] = break_ir;
+}
+
+void ir_append_continue(ir_t *continue_ir) {
+	total_continues++;
+	continues = realloc(continues, total_continues * sizeof(ir_t*));
+	continues[total_continues-1] = continue_ir;
 }
 
